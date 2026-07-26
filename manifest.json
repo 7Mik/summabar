@@ -2,10 +2,10 @@
   "manifest_version": 3,
   "name": "SummaBar - Instant YouTube LLM Summarizer",
   "version": "1.0.0",
-  "description": "Streamlined floating bar to extract YouTube transcripts and comments and send them directly to ChatGPT, Claude, Gemini, DeepSeek, or Perplexity.",
+  "description": "Instant YouTube video and comment summaries with ChatGPT, Claude, Gemini, DeepSeek, Grok, and custom LLM providers.",
   "icons": {
-    "16": "icon.png",
-    "48": "icon.png",
+    "16": "icon16.png",
+    "48": "icon48.png",
     "128": "icon.png"
   },
   "browser_specific_settings": {

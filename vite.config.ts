@@ -32,6 +32,12 @@ export default defineConfig({
         if (existsSync('icon.png')) {
           copyFileSync('icon.png', 'dist/icon.png');
         }
+        if (existsSync('icon48.png')) {
+          copyFileSync('icon48.png', 'dist/icon48.png');
+        }
+        if (existsSync('icon16.png')) {
+          copyFileSync('icon16.png', 'dist/icon16.png');
+        }
       }
     }
   ]
