@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "SummaBar - Instant YouTube LLM Summarizer",
+  "version": "1.0.0",
+  "description": "Streamlined floating bar to extract YouTube transcripts and comments and send them directly to ChatGPT, Claude, Gemini, DeepSeek, or Perplexity.",
+  "icons": {
+    "128": "icon.png"
+  },
+  "permissions": [
+    "storage",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://*.youtube.com/*",
+    "https://*.googlevideo.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/watch*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
