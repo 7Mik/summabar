@@ -2,8 +2,12 @@ export type LLMProvider =
   | 'chatgpt' 
   | 'claude' 
   | 'gemini' 
+  | 'aistudio'
+  | 'mistral'
+  | 'grok'
   | 'deepseek' 
   | 'perplexity' 
+  | 'clipboard'
   | 'custom';
 
 export type SummaryType = 
@@ -11,7 +15,8 @@ export type SummaryType =
   | 'medium' 
   | 'extended' 
   | 'nested_bullet_points' 
-  | 'timestamps';
+  | 'timestamps'
+  | 'custom';
 
 export type AdsPreference = 'erase' | 'section' | 'keep';
 
@@ -20,6 +25,7 @@ export interface UserSettings {
   customUrl?: string;
   language: string; // e.g. 'it', 'en', 'es', 'fr', 'de'
   summaryType: SummaryType;
+  customSummaryPrompt?: string;
   adsPreference: AdsPreference;
   autoCopy: boolean;
 }
@@ -68,8 +74,23 @@ export const PROVIDER_INFO: Record<LLMProvider, { name: string; url: string; ico
   },
   gemini: {
     name: 'Gemini',
-    url: 'https://gemini.google.com/app?q=',
+    url: 'https://gemini.google.com/app',
     icon: '✨'
+  },
+  aistudio: {
+    name: 'Google AI Studio',
+    url: 'https://aistudio.google.com/prompts/new_chat',
+    icon: '⚡'
+  },
+  mistral: {
+    name: 'Mistral AI',
+    url: 'https://chat.mistral.ai/chat',
+    icon: '🌊'
+  },
+  grok: {
+    name: 'Grok',
+    url: 'https://grok.com/',
+    icon: '🚀'
   },
   deepseek: {
     name: 'DeepSeek',
@@ -80,6 +101,11 @@ export const PROVIDER_INFO: Record<LLMProvider, { name: string; url: string; ico
     name: 'Perplexity',
     url: 'https://www.perplexity.ai/?q=',
     icon: '🔍'
+  },
+  clipboard: {
+    name: 'Clipboard',
+    url: '',
+    icon: '📋'
   },
   custom: {
     name: 'Custom Provider',

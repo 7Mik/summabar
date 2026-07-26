@@ -1,126 +1,142 @@
-/* SummaBar Modern Design System & Styles */
+/* SummaBar YouTube-Native 1:1 Action Bar Design System */
 
-:root {
-  --sb-bg: rgba(18, 18, 24, 0.85);
-  --sb-border: rgba(255, 255, 255, 0.12);
-  --sb-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 12px rgba(99, 102, 241, 0.2);
-  --sb-text: #f3f4f6;
-  --sb-muted: #9ca3af;
-  --sb-accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-  --sb-btn-bg: rgba(255, 255, 255, 0.07);
-  --sb-btn-hover: rgba(255, 255, 255, 0.15);
-  --sb-radius: 9999px;
-  --sb-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+/* Dark Mode (YouTube Dark Theme) */
+#summabar-root,
+#summabar-root[data-theme="dark"] {
+  --sb-yt-bg: rgba(255, 255, 255, 0.1);
+  --sb-yt-bg-hover: rgba(255, 255, 255, 0.2);
+  --sb-yt-text: #f1f1f1;
+  --sb-yt-divider: rgba(255, 255, 255, 0.2);
+  --sb-yt-modal-bg: #212121;
+  --sb-yt-modal-text: #ffffff;
+  --sb-yt-modal-border: rgba(255, 255, 255, 0.1);
+  --sb-yt-font: "Roboto", "Arial", sans-serif;
 }
 
-/* Floating Bar Container */
+/* Light Mode (YouTube Light Theme) */
+#summabar-root[data-theme="light"],
+html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
+  --sb-yt-bg: rgba(0, 0, 0, 0.05);
+  --sb-yt-bg-hover: rgba(0, 0, 0, 0.1);
+  --sb-yt-text: #0f0f0f;
+  --sb-yt-divider: rgba(0, 0, 0, 0.15);
+  --sb-yt-modal-bg: #ffffff;
+  --sb-yt-modal-text: #0f0f0f;
+  --sb-yt-modal-border: rgba(0, 0, 0, 0.1);
+}
+
+/* Embedded Bar Container in YouTube Right Sidebar */
 #summabar-root {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999999;
-  font-family: var(--sb-font);
-  pointer-events: auto;
-  user-select: none;
-  animation: summabar-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes summabar-slide-up {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0) scale(1);
-  }
+  width: 100% !important;
+  margin-bottom: 12px !important;
+  box-sizing: border-box !important;
+  z-index: 100 !important;
+  font-family: var(--sb-yt-font) !important;
+  user-select: none !important;
 }
 
 .summabar-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  background: var(--sb-bg);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid var(--sb-border);
-  border-radius: var(--sb-radius);
-  box-shadow: var(--sb-shadow);
-  transition: all 0.3s ease;
+  display: flex !important;
+  align-items: center !important;
+  background: transparent !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
 }
 
-.summabar-container:hover {
-  border-color: rgba(168, 85, 247, 0.3);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 20px rgba(168, 85, 247, 0.3);
+.summabar-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  flex-wrap: wrap !important;
 }
 
-.summabar-brand {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-right: 6px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-  background: var(--sb-accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Common Split Pill Styling */
+.summabar-split-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 36px !important;
+  background-color: var(--sb-yt-bg) !important;
+  border-radius: 18px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 
-.summabar-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: var(--sb-btn-bg);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 9999px;
-  color: var(--sb-text);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
-  white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+/* Left Brand Item inside Pill 1 */
+.summabar-brand-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 36px !important;
+  padding: 0 10px 0 14px !important;
+  color: var(--sb-yt-text) !important;
+  font-family: var(--sb-yt-font) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
 }
 
-.summabar-btn:hover {
-  background: var(--sb-btn-hover);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+.summabar-brand-item svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  flex-shrink: 0 !important;
 }
 
-.summabar-btn:active {
-  transform: translateY(0) scale(0.97);
+/* Split Buttons */
+.summabar-split-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--sb-yt-text) !important;
+  font-family: var(--sb-yt-font) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  outline: none !important;
+  white-space: nowrap !important;
+  transition: background-color 0.15s ease !important;
 }
 
-.summabar-btn-primary {
-  background: var(--sb-accent-gradient);
-  border: none;
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+.summabar-split-btn:hover {
+  background-color: var(--sb-yt-bg-hover) !important;
 }
 
-.summabar-btn-primary:hover {
-  filter: brightness(1.15);
-  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.45);
+.summabar-split-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  flex-shrink: 0 !important;
 }
 
-.summabar-btn-icon-only {
-  padding: 8px;
-  border-radius: 50%;
+.summabar-icon-only-btn {
+  padding: 0 12px !important;
 }
 
+/* Divider Line */
+.summabar-divider {
+  width: 1px !important;
+  height: 20px !important;
+  background-color: var(--sb-yt-divider) !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Spinner */
 .summabar-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: summabar-spin 0.8s linear infinite;
+  width: 14px !important;
+  height: 14px !important;
+  border: 2px solid rgba(128, 128, 128, 0.4) !important;
+  border-top-color: currentColor !important;
+  border-radius: 50% !important;
+  animation: summabar-spin 0.8s linear infinite !important;
 }
 
 @keyframes summabar-spin {
@@ -129,140 +145,115 @@
 
 /* Toast Notifications */
 .summabar-toast {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(17, 24, 39, 0.92);
-  color: #ffffff;
-  padding: 10px 18px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  z-index: 1000000;
-  backdrop-filter: blur(12px);
-  pointer-events: none;
-  animation: summabar-toast-in 0.3s ease, summabar-toast-out 0.3s ease 2.7s forwards;
+  position: fixed !important;
+  bottom: 32px !important;
+  left: 32px !important;
+  background: var(--sb-yt-modal-bg, #212121) !important;
+  color: var(--sb-yt-modal-text, #ffffff) !important;
+  padding: 12px 20px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--sb-yt-modal-border, rgba(255, 255, 255, 0.1)) !important;
+  font-family: var(--sb-yt-font) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+  z-index: 1000000 !important;
+  pointer-events: none !important;
+  animation: summabar-toast-in 0.2s ease !important;
 }
 
 @keyframes summabar-toast-in {
-  from { opacity: 0; transform: translate(-50%, 10px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes summabar-toast-out {
-  from { opacity: 1; transform: translate(-50%, 0); }
-  to { opacity: 0; transform: translate(-50%, -10px); }
-}
-
-/* Modal Overlay */
+/* Settings Modal */
 .summabar-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000001;
-  font-family: var(--sb-font);
-  animation: summabar-fade-in 0.2s ease;
-}
-
-@keyframes summabar-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1000001 !important;
+  font-family: var(--sb-yt-font) !important;
 }
 
 .summabar-modal {
-  width: 100%;
-  max-width: 460px;
-  background: #12131a;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-  color: var(--sb-text);
-  animation: summabar-modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes summabar-modal-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  width: 100% !important;
+  max-width: 440px !important;
+  background: var(--sb-yt-modal-bg, #212121) !important;
+  color: var(--sb-yt-modal-text, #ffffff) !important;
+  border: 1px solid var(--sb-yt-modal-border, rgba(255, 255, 255, 0.1)) !important;
+  border-radius: 12px !important;
+  padding: 24px !important;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.4) !important;
 }
 
 .summabar-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 20px !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2) !important;
 }
 
 .summabar-modal-title {
-  font-size: 18px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-size: 16px !important;
+  font-weight: 500 !important;
 }
 
 .summabar-modal-close {
-  background: none;
-  border: none;
-  color: var(--sb-muted);
-  font-size: 20px;
-  cursor: pointer;
-  padding: 4px;
-  line-height: 1;
+  background: none !important;
+  border: none !important;
+  color: inherit !important;
+  font-size: 24px !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  opacity: 0.7 !important;
 }
 
 .summabar-modal-close:hover {
-  color: #ffffff;
+  opacity: 1 !important;
 }
 
 .summabar-form-group {
-  margin-bottom: 16px;
+  margin-bottom: 16px !important;
 }
 
 .summabar-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #d1d5db;
+  display: block !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  margin-bottom: 6px !important;
+  opacity: 0.9 !important;
 }
 
 .summabar-select, .summabar-input {
-  width: 100%;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  color: #ffffff;
-  font-size: 14px;
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease;
-}
-
-.summabar-select:focus, .summabar-input:focus {
-  border-color: #818cf8;
+  width: 100% !important;
+  padding: 8px 12px !important;
+  background: var(--sb-yt-bg) !important;
+  border: 1px solid rgba(128, 128, 128, 0.3) !important;
+  border-radius: 8px !important;
+  color: inherit !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  outline: none !important;
+  box-sizing: border-box !important;
 }
 
 .summabar-select option {
-  background: #1e1f29;
-  color: #ffffff;
+  background: var(--sb-yt-modal-bg, #212121) !important;
+  color: var(--sb-yt-modal-text, #ffffff) !important;
 }
 
 .summabar-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  margin-top: 24px !important;
+  padding-top: 16px !important;
+  border-top: 1px solid rgba(128, 128, 128, 0.2) !important;
 }

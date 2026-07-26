@@ -6,19 +6,45 @@
   "icons": {
     "128": "icon.png"
   },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "summabar@summabar.com",
+      "strict_min_version": "109.0"
+    }
+  },
   "permissions": [
     "storage",
     "clipboardWrite"
   ],
   "host_permissions": [
     "https://*.youtube.com/*",
-    "https://*.googlevideo.com/*"
+    "https://*.googlevideo.com/*",
+    "https://gemini.google.com/*",
+    "https://aistudio.google.com/*",
+    "https://claude.ai/*",
+    "https://chat.mistral.ai/*",
+    "https://grok.com/*",
+    "https://x.ai/*",
+    "https://chat.deepseek.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/watch*"],
+      "matches": ["https://*.youtube.com/*"],
       "js": ["content.js"],
       "css": ["styles.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://gemini.google.com/*",
+        "https://aistudio.google.com/*",
+        "https://claude.ai/*",
+        "https://chat.mistral.ai/*",
+        "https://grok.com/*",
+        "https://x.ai/*",
+        "https://chat.deepseek.com/*"
+      ],
+      "js": ["injector.js"],
       "run_at": "document_idle"
     }
   ]
