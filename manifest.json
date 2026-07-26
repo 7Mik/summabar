@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "SummaBar - Instant YouTube LLM Summarizer",
+  "name": "SummaBar - Free YouTube LLM Summarizer",
   "version": "1.0.0",
-  "description": "Instant YouTube video and comment summaries with ChatGPT, Claude, Gemini, DeepSeek, Grok, and custom LLM providers.",
+  "description": "Free YouTube video and comment summaries with ChatGPT, Claude, Gemini, DeepSeek, Grok, and custom LLM providers.",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
