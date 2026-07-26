@@ -1,6 +1,7 @@
 import { UserSettings, SUPPORTED_LANGUAGES, LLMProvider, SummaryType, AdsPreference } from '../types';
 import { getSettings, saveSettings } from '../services/storage';
 import { t } from '../services/i18n';
+import { setSanitizedHTML } from '../services/dom';
 
 function escapeHtml(str: string): string {
   return str
@@ -21,7 +22,7 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
     overlay.id = 'summabar-modal-overlay';
     overlay.className = 'summabar-modal-overlay';
 
-    overlay.innerHTML = `
+    setSanitizedHTML(overlay, `
       <div class="summabar-modal">
         <div class="summabar-modal-header">
           <div class="summabar-modal-title">${t('settingsTitle', lang)}</div>
@@ -96,7 +97,7 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
           <button class="summabar-btn summabar-btn-primary" id="sb-modal-save">${t('saveSettings', lang)}</button>
         </div>
       </div>
-    `;
+    `);
 
     document.body.appendChild(overlay);
 

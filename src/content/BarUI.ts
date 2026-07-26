@@ -5,6 +5,7 @@ import { buildVideoSummaryPrompt, buildCommentSummaryPrompt } from '../services/
 import { openLLMProviderWithPrompt } from '../services/provider';
 import { openSettingsModal } from './SettingsModal';
 import { t } from '../services/i18n';
+import { setSanitizedHTML } from '../services/dom';
 
 function showToast(message: string): void {
   const existing = document.querySelector('.summabar-toast');
@@ -171,7 +172,7 @@ export class BarUI {
     el.id = 'summabar-root';
     el.setAttribute('data-position', this.barPosition);
     applyThemeToBar(el);
-    el.innerHTML = `
+    setSanitizedHTML(el, `
       <div class="summabar-container">
         <div class="summabar-actions">
           <!-- 1) Pill 1: SummaBar Brand | Settings Gear Split Pill -->
@@ -221,7 +222,7 @@ export class BarUI {
           </div>
         </div>
       </div>
-    `;
+    `);
     return el;
   }
 
@@ -333,10 +334,10 @@ export class BarUI {
     this.isProcessing = loading;
     if (loading) {
       button.disabled = true;
-      button.innerHTML = `<div class="summabar-spinner"></div> <span>${originalText}</span>`;
+      setSanitizedHTML(button, `<div class="summabar-spinner"></div> <span>${originalText}</span>`);
     } else {
       button.disabled = false;
-      button.innerHTML = `${iconSvg} <span>${originalText}</span>`;
+      setSanitizedHTML(button, `${iconSvg} <span>${originalText}</span>`);
     }
   }
 
