@@ -1,0 +1,66 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0 or 1.0.0-beta)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build extension
+        run: npm run build
+        
+      - name: Package extension
+        run: |
+          cd dist
+          zip -r ../YtAlgoRebel_Universal.zip *
+          cd ..
+          
+      - name: Generate Release Tag
+        id: tag
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG_NAME="v${VERSION_INPUT}"
+            if [[ "${VERSION_INPUT}" == *-* ]]; then
+              echo "prerelease=true" >> $GITHUB_OUTPUT
+            else
+              echo "prerelease=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            TAG_NAME="v$(node -p "require('./package.json').version")-$(date +'%Y%m%d%H%M%S')"
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+        
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          prerelease: ${{ steps.tag.outputs.prerelease == 'true' }}
+          files: |
+            YtAlgoRebel_Universal.zip
+          generate_release_notes: true
