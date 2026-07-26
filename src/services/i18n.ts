@@ -1,4 +1,4 @@
-export type SupportedLang = 'it' | 'en' | 'es' | 'fr' | 'de';
+export type SupportedLang = 'it' | 'en' | 'es' | 'fr' | 'de' | 'pt';
 
 export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
   it: {
@@ -170,6 +170,40 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     styleCustom: 'Benutzerdefinierter Prompt...',
     customPromptLabel: 'Benutzerdefinierte Anweisungen',
     customPromptPlaceholder: 'Z.B.: "Extrahiere die 5 Hauptideen und erstelle eine Tabelle..."',
+  },
+  pt: {
+    summarizeVideo: 'Resumir Vídeo',
+    summarizeComments: 'Resumir Comentários',
+    settingsTitle: 'Configurações SummaBar',
+    extractingSubtitles: 'Extraindo legendas...',
+    extractingComments: 'Extraindo comentários...',
+    noVideoDetected: 'Nenhum vídeo do YouTube detectado',
+    noSubtitlesFound: 'Nenhuma legenda ou transcrição disponível',
+    noCommentsFound: 'Nenhum comentário encontrado',
+    promptSentClipboard: 'Prompt enviado para {provider} (Cole com Ctrl+V)',
+    promptSentQuery: 'Prompt enviado para {provider}',
+    promptCopiedOnly: 'Prompt copiado para a área de transferência',
+    copyClipboardOption: 'Copiar para área de transferência (Sem nova aba)',
+    errorSummary: 'Erro ao extrair resumo',
+    errorComments: 'Erro ao extrair comentários',
+    targetProvider: 'Provedor LLM de Destino',
+    customUrlLabel: 'URL Personalizada (Use {prompt} para o valor)',
+    summaryLanguage: 'Idioma do Resumo',
+    summaryStyle: 'Estilo do Resumo',
+    sponsorshipLabel: 'Gestão de Patrocinadores e Anúncios',
+    eraseSponsors: 'Remover Patrocinadores e Anúncios completamente',
+    isolateSponsors: 'Isolar Patrocinadores em uma seção dedicada',
+    keepSponsors: 'Manter tudo inalterado',
+    cancel: 'Cancelar',
+    saveSettings: 'Salvar Configurações',
+    styleBalanced: 'Equilibrado (Padrão)',
+    styleConcise: 'Conciso e Rápido',
+    styleExtended: 'Detalhado e Abrangente',
+    styleBullets: 'Marcadores Estruturados',
+    styleTimestamps: 'Marcações de Tempo (Timestamps)',
+    styleCustom: 'Prompt Personalizado...',
+    customPromptLabel: 'Instruções do Prompt Personalizado',
+    customPromptPlaceholder: 'Ex: "Extraia as 5 ideias principais e crie uma tabela..."',
   }
 };
 

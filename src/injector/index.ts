@@ -3,6 +3,7 @@ const PENDING_PROMPT_KEY = 'summabar_pending_prompt';
 interface PendingPromptData {
   text: string;
   timestamp: number;
+  provider?: string;
 }
 
 function getPendingPrompt(): Promise<PendingPromptData | null> {
@@ -16,12 +17,7 @@ function getPendingPrompt(): Promise<PendingPromptData | null> {
         }
       });
     } else {
-      try {
-        const raw = localStorage.getItem(PENDING_PROMPT_KEY);
-        resolve(raw ? JSON.parse(raw) : null);
-      } catch {
-        resolve(null);
-      }
+      resolve(null);
     }
   });
 }
@@ -29,10 +25,6 @@ function getPendingPrompt(): Promise<PendingPromptData | null> {
 function clearPendingPrompt(): void {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
     chrome.storage.local.remove([PENDING_PROMPT_KEY]);
-  } else {
-    try {
-      localStorage.removeItem(PENDING_PROMPT_KEY);
-    } catch {}
   }
 }
 
@@ -63,6 +55,23 @@ function autoInjectPrompt(): void {
       return;
     }
 
+    const hostMap: Record<string, string> = {
+      'gemini.google.com': 'gemini',
+      'aistudio.google.com': 'aistudio',
+      'claude.ai': 'claude',
+      'chat.mistral.ai': 'mistral',
+      'grok.com': 'grok',
+      'x.ai': 'grok',
+      'chat.deepseek.com': 'deepseek'
+    };
+    
+    if (data.provider && hostMap[location.hostname] && data.provider !== hostMap[location.hostname]) {
+      return;
+    }
+
+    // Clear from storage immediately to prevent cross-tab duplication
+    clearPendingPrompt();
+
     console.log('[SummaBar Injector] Found pending prompt for AI provider:', location.hostname);
 
     let attempts = 0;
@@ -82,14 +91,13 @@ function autoInjectPrompt(): void {
         document.querySelector('textarea[placeholder*="Ask"]') ||
         document.querySelector('textarea[placeholder*="Message"]') ||
         document.querySelector('textarea[placeholder*="Chiedi"]') ||
-        document.querySelector('div[contenteditable="true"]') ||
-        document.querySelector('textarea');
+        document.querySelector('main div[contenteditable="true"]') ||
+        document.querySelector('main textarea');
 
       if (targetInput) {
         clearInterval(interval);
         console.log('[SummaBar Injector] Injecting prompt into input element:', targetInput);
         injectTextIntoElement(targetInput as HTMLElement, data.text);
-        clearPendingPrompt();
       } else if (attempts >= 25) {
         clearInterval(interval);
         console.warn('[SummaBar Injector] Input element not found after retries.');

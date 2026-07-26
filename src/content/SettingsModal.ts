@@ -2,6 +2,15 @@ import { UserSettings, SUPPORTED_LANGUAGES, LLMProvider, SummaryType, AdsPrefere
 import { getSettings, saveSettings } from '../services/storage';
 import { t } from '../services/i18n';
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export function openSettingsModal(onSave?: (settings: UserSettings) => void): void {
   // Check if modal is already open
   if (document.getElementById('summabar-modal-overlay')) return;
@@ -61,7 +70,7 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
 
         <div class="summabar-form-group" id="sb-custom-prompt-group" style="display: ${currentSettings.summaryType === 'custom' ? 'block' : 'none'};">
           <label class="summabar-label">${t('customPromptLabel', lang)}</label>
-          <textarea id="sb-custom-prompt" class="summabar-input" style="min-height: 75px; resize: vertical;" placeholder="${t('customPromptPlaceholder', lang)}">${currentSettings.customSummaryPrompt || ''}</textarea>
+          <textarea id="sb-custom-prompt" class="summabar-input" style="min-height: 75px; resize: vertical;" placeholder="${escapeHtml(t('customPromptPlaceholder', lang))}">${escapeHtml(currentSettings.customSummaryPrompt || '')}</textarea>
         </div>
 
         <div class="summabar-form-group">

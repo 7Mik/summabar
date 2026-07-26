@@ -51,7 +51,7 @@ Formatting rules:
       if (customPromptText && customPromptText.trim()) {
         let userPrompt = customPromptText.trim();
         if (userPrompt.includes('{transcript}')) {
-          userPrompt = userPrompt.replace('{transcript}', fullTranscriptText);
+          userPrompt = userPrompt.replaceAll('{transcript}', fullTranscriptText);
         } else {
           userPrompt += `\n\nProvide the response in **${targetLanguageName}**.\n\nTranscript:\n---\n${fullTranscriptText}\n---`;
         }

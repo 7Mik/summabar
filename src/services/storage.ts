@@ -4,8 +4,8 @@ const STORAGE_KEY = 'summabar_user_settings';
 
 export async function getSettings(): Promise<UserSettings> {
   return new Promise((resolve) => {
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.get([STORAGE_KEY], (result: Record<string, any>) => {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get([STORAGE_KEY], (result: Record<string, any>) => {
         if (result && result[STORAGE_KEY]) {
           resolve({ ...DEFAULT_SETTINGS, ...result[STORAGE_KEY] });
         } else {
@@ -29,8 +29,8 @@ export async function getSettings(): Promise<UserSettings> {
 
 export async function saveSettings(settings: UserSettings): Promise<void> {
   return new Promise((resolve) => {
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-      chrome.storage.sync.set({ [STORAGE_KEY]: settings }, () => {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.set({ [STORAGE_KEY]: settings }, () => {
         resolve();
       });
     } else {

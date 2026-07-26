@@ -89,13 +89,20 @@ export async function openLLMProviderWithPrompt(
   }
 
   // 3. Save pending prompt to storage for auto-injector content script
-  const pendingData = { text: promptText, timestamp: Date.now() };
-  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.set({ summabar_pending_prompt: pendingData });
-  } else {
-    try {
-      localStorage.setItem('summabar_pending_prompt', JSON.stringify(pendingData));
-    } catch {}
+  const autoInjectProviders = ['gemini', 'aistudio', 'claude', 'mistral', 'grok', 'deepseek'];
+  if (autoInjectProviders.includes(settings.provider)) {
+    const pendingData = { text: promptText, timestamp: Date.now(), provider: settings.provider };
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      try {
+        chrome.storage.local.set({ summabar_pending_prompt: pendingData });
+        // Failsafe cleanup if injector never runs
+        setTimeout(() => {
+          chrome.storage.local.remove(['summabar_pending_prompt']);
+        }, 120000);
+      } catch (err) {
+        console.warn('[SummaBar] Error setting pending prompt:', err);
+      }
+    }
   }
 
   // 4. Open target URL in a new tab

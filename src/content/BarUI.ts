@@ -38,9 +38,12 @@ export class BarUI {
   private checkInterval: number | null = null;
   private userLang: string = 'it';
   private themeObserver: MutationObserver | null = null;
+  private destroyed: boolean = false;
 
   public render(): void {
+    this.destroyed = false;
     getSettings().then(s => {
+      if (this.destroyed) return;
       this.userLang = s.language;
       this.ensureInserted();
     });
@@ -267,6 +270,7 @@ export class BarUI {
   }
 
   public destroy(): void {
+    this.destroyed = true;
     if (this.checkInterval) {
       window.clearInterval(this.checkInterval);
       this.checkInterval = null;
