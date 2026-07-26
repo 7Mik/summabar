@@ -82,6 +82,15 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
           </select>
         </div>
 
+        <div class="summabar-form-group">
+          <label class="summabar-label">${t('barPositionLabel', lang)}</label>
+          <select id="sb-position-select" class="summabar-select">
+            <option value="sidebar" ${currentSettings.barPosition === 'sidebar' || !currentSettings.barPosition ? 'selected' : ''}>${t('barPositionSidebar', lang)}</option>
+            <option value="inline_likes" ${currentSettings.barPosition === 'inline_likes' ? 'selected' : ''}>${t('barPositionInline', lang)}</option>
+            <option value="below_likes" ${currentSettings.barPosition === 'below_likes' ? 'selected' : ''}>${t('barPositionBelow', lang)}</option>
+          </select>
+        </div>
+
         <div class="summabar-modal-footer">
           <button class="summabar-btn" id="sb-modal-cancel">${t('cancel', lang)}</button>
           <button class="summabar-btn summabar-btn-primary" id="sb-modal-save">${t('saveSettings', lang)}</button>
@@ -99,6 +108,7 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
     const customPromptGroup = document.getElementById('sb-custom-prompt-group') as HTMLElement;
     const customPromptInput = document.getElementById('sb-custom-prompt') as HTMLTextAreaElement;
     const adsSelect = document.getElementById('sb-ads-select') as HTMLSelectElement;
+    const positionSelect = document.getElementById('sb-position-select') as HTMLSelectElement;
     const closeBtn = document.getElementById('sb-modal-close') as HTMLElement;
     const cancelBtn = document.getElementById('sb-modal-cancel') as HTMLElement;
     const saveBtn = document.getElementById('sb-modal-save') as HTMLElement;
@@ -129,7 +139,8 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
         language: languageSelect.value,
         summaryType: styleSelect.value as SummaryType,
         customSummaryPrompt: customPromptInput.value.trim(),
-        adsPreference: adsSelect.value as AdsPreference
+        adsPreference: adsSelect.value as AdsPreference,
+        barPosition: positionSelect.value as 'sidebar' | 'inline_likes' | 'below_likes'
       };
 
       await saveSettings(updatedSettings);

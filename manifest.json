@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "description": "Streamlined floating bar to extract YouTube transcripts and comments and send them directly to ChatGPT, Claude, Gemini, DeepSeek, or Perplexity.",
   "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
     "128": "icon.png"
   },
   "browser_specific_settings": {

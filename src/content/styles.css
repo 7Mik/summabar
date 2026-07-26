@@ -27,12 +27,33 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
 
 /* Embedded Bar Container in YouTube Right Sidebar */
 #summabar-root {
-  width: 100% !important;
-  margin-bottom: 12px !important;
   box-sizing: border-box !important;
   z-index: 100 !important;
   font-family: var(--sb-yt-font) !important;
   user-select: none !important;
+}
+
+#summabar-root[data-position="sidebar"] {
+  width: 100% !important;
+  margin-bottom: 12px !important;
+}
+
+#summabar-root[data-position="inline_likes"] {
+  width: auto !important;
+  margin-right: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  vertical-align: middle !important;
+}
+
+#summabar-root[data-position="below_likes"] {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin-top: 12px !important;
+  margin-bottom: 12px !important;
+  box-sizing: border-box !important;
 }
 
 .summabar-container {
@@ -40,24 +61,41 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
   align-items: center !important;
   background: transparent !important;
   box-sizing: border-box !important;
+}
+
+#summabar-root[data-position="sidebar"] .summabar-container {
   width: 100% !important;
+}
+
+#summabar-root[data-position="inline_likes"] .summabar-container,
+#summabar-root[data-position="below_likes"] .summabar-container {
+  width: auto !important;
 }
 
 .summabar-actions {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
+  flex-wrap: nowrap !important;
+}
+
+#summabar-root[data-position="sidebar"] .summabar-actions {
   width: 100% !important;
-  flex-wrap: wrap !important;
+}
+
+#summabar-root[data-position="inline_likes"] .summabar-actions,
+#summabar-root[data-position="below_likes"] .summabar-actions {
+  width: auto !important;
+  justify-content: flex-end !important;
 }
 
 /* Common Split Pill Styling */
 .summabar-split-pill {
   display: inline-flex !important;
   align-items: center !important;
-  height: 36px !important;
+  height: 40px !important;
   background-color: var(--sb-yt-bg) !important;
-  border-radius: 18px !important;
+  border-radius: 20px !important;
   padding: 0 !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
@@ -68,7 +106,7 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  height: 36px !important;
+  height: 40px !important;
   padding: 0 10px 0 14px !important;
   color: var(--sb-yt-text) !important;
   font-family: var(--sb-yt-font) !important;
@@ -77,12 +115,19 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
   white-space: nowrap !important;
 }
 
-.summabar-brand-item svg {
-  width: 18px !important;
-  height: 18px !important;
-  stroke: currentColor !important;
-  fill: none !important;
+/* Animated Gradient Lightning Bolt Icon */
+.summabar-lightning-icon {
+  width: 24px !important;
+  height: 24px !important;
+  display: inline-block !important;
   flex-shrink: 0 !important;
+  transition: transform 0.25s ease, filter 0.25s ease !important;
+}
+
+.summabar-brand-item:hover .summabar-lightning-icon,
+.summabar-lightning-icon:hover {
+  transform: scale(1.18) rotate(-4deg) !important;
+  filter: drop-shadow(0 0 6px rgba(220, 0, 201, 0.7)) !important;
 }
 
 /* Split Buttons */
@@ -90,7 +135,7 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  height: 36px !important;
+  height: 40px !important;
   padding: 0 14px !important;
   background: transparent !important;
   border: none !important;
@@ -109,9 +154,10 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
 }
 
 .summabar-split-btn svg {
-  width: 18px !important;
-  height: 18px !important;
+  width: 24px !important;
+  height: 24px !important;
   stroke: currentColor !important;
+  stroke-width: 1.75px !important;
   fill: none !important;
   flex-shrink: 0 !important;
 }
@@ -123,7 +169,7 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
 /* Divider Line */
 .summabar-divider {
   width: 1px !important;
-  height: 20px !important;
+  height: 24px !important;
   background-color: var(--sb-yt-divider) !important;
   margin: 0 !important;
   flex-shrink: 0 !important;
@@ -296,4 +342,23 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) .sum
 #summabar-root[data-theme="light"] .summabar-btn-primary:hover,
 html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) .summabar-btn-primary:hover {
   background: #0056b3 !important;
+}
+
+/* Responsive Layout: Show text when space is available, collapse when narrow */
+@media (max-width: 1100px) {
+  .summabar-action-text {
+    display: none !important;
+  }
+  .summabar-split-btn {
+    padding: 0 10px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .summabar-brand-text {
+    display: none !important;
+  }
+  .summabar-brand-item {
+    padding: 0 10px !important;
+  }
 }

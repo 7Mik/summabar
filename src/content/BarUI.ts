@@ -39,12 +39,14 @@ export class BarUI {
   private userLang: string = 'it';
   private themeObserver: MutationObserver | null = null;
   private destroyed: boolean = false;
+  private barPosition: 'sidebar' | 'inline_likes' | 'below_likes' = 'sidebar';
 
   public render(): void {
     this.destroyed = false;
     getSettings().then(s => {
       if (this.destroyed) return;
       this.userLang = s.language;
+      this.barPosition = s.barPosition || 'sidebar';
       this.ensureInserted();
     });
 
@@ -78,19 +80,32 @@ export class BarUI {
       }
     }
 
-    // List of candidate containers ordered by priority (Sidebar first, then watch metadata/comments)
-    const selectors = [
-      '#secondary-inner',
-      '#secondary',
-      '#related #items',
-      '#related',
-      'ytd-watch-next-feed-renderer',
-      '#above-the-fold',
-      'ytd-watch-metadata',
-      '#below',
-      '#primary-inner',
-      '#comments'
-    ];
+    // List of candidate containers ordered by priority depending on the setting
+    let selectors: string[];
+    if (this.barPosition === 'inline_likes') {
+      selectors = [
+        'ytd-watch-metadata #top-level-buttons-computed',
+        '#top-level-buttons-computed',
+        'ytd-menu-renderer #top-level-buttons-computed',
+        '#actions-inner',
+        '#actions ytd-menu-renderer',
+        '#actions'
+      ];
+    } else if (this.barPosition === 'below_likes') {
+      selectors = [
+        '#top-row',
+        'ytd-watch-metadata',
+        '#above-the-fold'
+      ];
+    } else {
+      selectors = [
+        '#secondary-inner',
+        '#secondary',
+        '#related #items',
+        '#related',
+        'ytd-watch-next-feed-renderer'
+      ];
+    }
 
     let targetContainer: Element | null = null;
     for (const selector of selectors) {
@@ -119,10 +134,33 @@ export class BarUI {
       this.attachEvents();
     }
 
-    if (targetContainer.firstChild) {
-      targetContainer.insertBefore(this.element, targetContainer.firstChild);
+    this.element.setAttribute('data-position', this.barPosition);
+
+    if (this.barPosition === 'below_likes') {
+      if (targetContainer.id === 'top-row') {
+        targetContainer.insertAdjacentElement('afterend', this.element);
+      } else {
+        const bottomRow = targetContainer.querySelector('#bottom-row');
+        if (bottomRow) {
+          targetContainer.insertBefore(this.element, bottomRow);
+        } else {
+          targetContainer.appendChild(this.element);
+        }
+      }
     } else {
-      targetContainer.appendChild(this.element);
+      let insertTarget = targetContainer;
+      if (this.barPosition === 'inline_likes') {
+        const innerButtons = targetContainer.querySelector('#top-level-buttons-computed, #actions-inner');
+        if (innerButtons) {
+          insertTarget = innerButtons;
+        }
+      }
+
+      if (insertTarget.firstChild) {
+        insertTarget.insertBefore(this.element, insertTarget.firstChild);
+      } else {
+        insertTarget.appendChild(this.element);
+      }
     }
 
     console.log('[SummaBar] Attached bar to container:', targetContainer);
@@ -131,32 +169,54 @@ export class BarUI {
   private createBarElement(): HTMLElement {
     const el = document.createElement('div');
     el.id = 'summabar-root';
+    el.setAttribute('data-position', this.barPosition);
     applyThemeToBar(el);
     el.innerHTML = `
       <div class="summabar-container">
         <div class="summabar-actions">
           <!-- 1) Pill 1: SummaBar Brand | Settings Gear Split Pill -->
           <div class="summabar-split-pill">
-            <div class="summabar-brand-item">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              <span>SummaBar</span>
+            <div class="summabar-brand-item" title="SummaBar">
+              <svg class="summabar-lightning-icon" width="24" height="24" viewBox="0 0 24 24">
+                <defs>
+                  <linearGradient id="sb-lava-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff0000">
+                      <animate class="sb-lava-anim" attributeName="stop-color" values="#ff0000;#dc00c9;#0082ff;#ff006f;#008be4;#ff0000" dur="5s" repeatCount="indefinite"/>
+                    </stop>
+                    <stop offset="25%" stop-color="#ff006f">
+                      <animate class="sb-lava-anim" attributeName="stop-color" values="#ff006f;#4a62ff;#008be4;#dc00c9;#ff0000;#ff006f" dur="5s" repeatCount="indefinite"/>
+                    </stop>
+                    <stop offset="50%" stop-color="#dc00c9">
+                      <animate class="sb-lava-anim" attributeName="stop-color" values="#dc00c9;#0082ff;#ff0000;#4a62ff;#008be4;#dc00c9" dur="5s" repeatCount="indefinite"/>
+                    </stop>
+                    <stop offset="75%" stop-color="#4a62ff">
+                      <animate class="sb-lava-anim" attributeName="stop-color" values="#4a62ff;#008be4;#ff006f;#0082ff;#ff0000;#4a62ff" dur="5s" repeatCount="indefinite"/>
+                    </stop>
+                    <stop offset="100%" stop-color="#0082ff">
+                      <animate class="sb-lava-anim" attributeName="stop-color" values="#0082ff;#ff0000;#dc00c9;#008be4;#ff006f;#0082ff" dur="5s" repeatCount="indefinite"/>
+                    </stop>
+                  </linearGradient>
+                </defs>
+                <path fill="url(#sb-lava-grad)" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              <span class="summabar-btn-text summabar-brand-text">SummaBar</span>
             </div>
             <div class="summabar-divider"></div>
             <button class="summabar-split-btn summabar-icon-only-btn" id="sb-btn-settings" title="${t('settingsTitle', this.userLang)}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </button>
           </div>
 
           <!-- 2) Pill 2: Summarize Video | Summarize Comments Split Pill -->
           <div class="summabar-split-pill">
-            <button class="summabar-split-btn" id="sb-btn-video">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>
-              <span>${t('summarizeVideo', this.userLang)}</span>
+            <button class="summabar-split-btn" id="sb-btn-video" title="${t('summarizeVideo', this.userLang)}">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>
+              <span class="summabar-btn-text summabar-action-text">${t('summarizeVideo', this.userLang)}</span>
             </button>
             <div class="summabar-divider"></div>
-            <button class="summabar-split-btn" id="sb-btn-comments">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span>${t('summarizeComments', this.userLang)}</span>
+            <button class="summabar-split-btn" id="sb-btn-comments" title="${t('summarizeComments', this.userLang)}">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span class="summabar-btn-text summabar-action-text">${t('summarizeComments', this.userLang)}</span>
             </button>
           </div>
         </div>
@@ -167,6 +227,17 @@ export class BarUI {
 
   private attachEvents(): void {
     if (!this.element) return;
+
+    const brandItem = this.element.querySelector('.summabar-brand-item');
+    const anims = this.element.querySelectorAll('.sb-lava-anim');
+    if (brandItem && anims.length > 0) {
+      brandItem.addEventListener('mouseenter', () => {
+        anims.forEach(a => a.setAttribute('dur', '1.0s'));
+      });
+      brandItem.addEventListener('mouseleave', () => {
+        anims.forEach(a => a.setAttribute('dur', '5s'));
+      });
+    }
 
     const btnVideo = this.element.querySelector('#sb-btn-video') as HTMLButtonElement;
     const btnComments = this.element.querySelector('#sb-btn-comments') as HTMLButtonElement;
@@ -187,7 +258,7 @@ export class BarUI {
   private async handleSummarizeVideo(button: HTMLButtonElement): Promise<void> {
     if (this.isProcessing) return;
 
-    const videoSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`;
+    const videoSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`;
 
     const videoId = getYouTubeVideoId();
     if (!videoId) {
@@ -224,7 +295,7 @@ export class BarUI {
   private async handleSummarizeComments(button: HTMLButtonElement): Promise<void> {
     if (this.isProcessing) return;
 
-    const commentsSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+    const commentsSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
 
     const videoId = getYouTubeVideoId();
     if (!videoId) {

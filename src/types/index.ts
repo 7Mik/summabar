@@ -28,6 +28,7 @@ export interface UserSettings {
   customSummaryPrompt?: string;
   adsPreference: AdsPreference;
   autoCopy: boolean;
+  barPosition?: 'sidebar' | 'inline_likes' | 'below_likes';
 }
 
 export interface TranscriptSegment {
@@ -49,7 +50,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   language: 'it',
   summaryType: 'medium',
   adsPreference: 'erase',
-  autoCopy: true
+  autoCopy: true,
+  barPosition: 'sidebar'
 };
 
 export const SUPPORTED_LANGUAGES = [

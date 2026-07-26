@@ -34,6 +34,10 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     styleCustom: 'Prompt Personalizzato...',
     customPromptLabel: 'Istruzioni Prompt Personalizzato',
     customPromptPlaceholder: 'Es: "Fai una lista delle 5 idee principali e crea una tabella delle risorse citate..."',
+    barPositionLabel: 'Posizione della Barra',
+    barPositionSidebar: 'Sopra i Video Consigliati (Laterale)',
+    barPositionInline: 'In linea con i Mi Piace (Stessa riga)',
+    barPositionBelow: 'Sotto i Mi Piace (Allineato a destra)',
   },
   en: {
     summarizeVideo: 'Summarize Video',
@@ -68,6 +72,10 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     styleCustom: 'Custom Prompt...',
     customPromptLabel: 'Custom Prompt Instructions',
     customPromptPlaceholder: 'E.g., "Extract the 5 main ideas and create a table of tools mentioned..."',
+    barPositionLabel: 'Bar Position',
+    barPositionSidebar: 'Above Recommended Videos (Sidebar)',
+    barPositionInline: 'Inline with Likes (Same Row)',
+    barPositionBelow: 'Below Likes (Right Aligned)',
   },
   es: {
     summarizeVideo: 'Resumir Video',
@@ -102,6 +110,10 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     styleCustom: 'Prompt Personalizado...',
     customPromptLabel: 'Instrucciones de Prompt Personalizado',
     customPromptPlaceholder: 'Ej: "Extrae las 5 ideas principales y crea una tabla de recursos..."',
+    barPositionLabel: 'Posición de la Barra',
+    barPositionSidebar: 'Encima de Videos Recomendados (Lateral)',
+    barPositionInline: 'En línea con Me Gusta (Misma fila)',
+    barPositionBelow: 'Debajo de Me Gusta (Alineado a la derecha)',
   },
   fr: {
     summarizeVideo: 'Résumer la Vidéo',
@@ -136,6 +148,10 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     styleCustom: 'Prompt Personnalisé...',
     customPromptLabel: 'Instructions de Prompt Personnalisé',
     customPromptPlaceholder: 'Ex : "Extraire les 5 idées principales et créer un tableau..."',
+    barPositionLabel: 'Position de la Barre',
+    barPositionSidebar: 'Au-dessus des Vidéos Recommandées (Latéral)',
+    barPositionInline: 'Aligné avec les J\'aime (Même ligne)',
+    barPositionBelow: 'Sous les J\'aime (Aligné à droite)',
   },
   de: {
     summarizeVideo: 'Video zusammenfassen',
@@ -170,6 +186,10 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     styleCustom: 'Benutzerdefinierter Prompt...',
     customPromptLabel: 'Benutzerdefinierte Anweisungen',
     customPromptPlaceholder: 'Z.B.: "Extrahiere die 5 Hauptideen und erstelle eine Tabelle..."',
+    barPositionLabel: 'Leistenposition',
+    barPositionSidebar: 'Über empfohlenen Videos (Seitenleiste)',
+    barPositionInline: 'Neben Gefällt mir (Gleiche Zeile)',
+    barPositionBelow: 'Unter Gefällt mir (Rechtsbündig)',
   },
   pt: {
     summarizeVideo: 'Resumir Vídeo',
@@ -204,6 +224,10 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     styleCustom: 'Prompt Personalizado...',
     customPromptLabel: 'Instruções do Prompt Personalizado',
     customPromptPlaceholder: 'Ex: "Extraia as 5 ideias principais e crie uma tabela..."',
+    barPositionLabel: 'Posição da Barra',
+    barPositionSidebar: 'Acima dos Vídeos Recomendados (Lateral)',
+    barPositionInline: 'Na mesma linha das Curtidas',
+    barPositionBelow: 'Abaixo das Curtidas (Alinhado à direita)',
   }
 };
 
