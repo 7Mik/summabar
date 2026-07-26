@@ -16,8 +16,9 @@ SummaBar ("we", "our", or "us") is committed to protecting your privacy. This Pr
 
 ## 📁 2. Data Storage & Usage
 
-- **Local Storage Only**: Your extension settings (such as your chosen LLM provider, preferred summary language, summary style, and ad filter options) are stored locally on your device using `chrome.storage.sync` (or your browser's `localStorage`).
-- **In-Memory Data Processing**: YouTube transcripts and comments are processed strictly in your browser's temporary local memory. Once formatted, the resulting text prompt is copied to your local system clipboard and sent directly to the LLM web interface (ChatGPT, Claude, Gemini, DeepSeek, Perplexity, or Custom Provider) via a standard web link opened in a new tab.
+- **Local Storage Only**: Your extension settings (such as your chosen LLM provider, preferred summary language, summary style, custom prompts, and ad filter options) are stored locally on your device using `chrome.storage.local` (or your browser's `localStorage`).
+- **In-Memory & Temporary Pending Prompts**: YouTube transcripts and comments are processed strictly in your browser's temporary local memory. When transferring prompts to web interfaces like Gemini, Claude, or DeepSeek, a temporary payload is stored locally in `chrome.storage.local` and automatically cleared immediately after being injected into the chat input area.
+- **System Clipboard**: When requested, formatted summary prompts are copied directly to your local system clipboard.
 
 ---
 
@@ -27,20 +28,29 @@ SummaBar requests only the minimal permissions required for its functionality:
 
 | Permission | Purpose |
 | :--- | :--- |
-| `storage` | Used exclusively to save and remember your preferred settings locally (e.g., target LLM provider, output language). |
-| `clipboardWrite` | Used to copy the formatted prompt payload to your local clipboard so you can easily paste it into your selected LLM interface. |
-| `https://*.youtube.com/*` | Used to read transcript data and top comments directly from YouTube watch pages. |
+| `storage` | Used exclusively to save your preferred settings locally and temporarily hold pending prompts for auto-filling into target LLM interfaces. |
+| `clipboardWrite` | Used to copy the formatted prompt payload to your local system clipboard. |
+| `https://*.youtube.com/*` | Used to read transcript data, video metadata, and top comments directly from YouTube watch pages. |
+| `https://*.googlevideo.com/*` | Used to fetch YouTube subtitle transcript streams. |
+| `https://gemini.google.com/*` | Used to automatically populate the prompt into Google Gemini's chat input area upon opening. |
+| `https://aistudio.google.com/*` | Used to automatically populate the prompt into Google AI Studio's chat input area upon opening. |
+| `https://claude.ai/*` | Used to automatically populate the prompt into Anthropic Claude's chat input area upon opening. |
+| `https://chat.mistral.ai/*` | Used to automatically populate the prompt into Mistral AI's chat input area upon opening. |
+| `https://grok.com/*` | Used to automatically populate the prompt into Grok's chat input area upon opening. |
+| `https://chat.deepseek.com/*` | Used to automatically populate the prompt into DeepSeek's chat input area upon opening. |
 
 ---
 
 ## 🌐 4. Third-Party Web Services
 
-When you click **Riassumi Video** or **Riassumi Commenti**, SummaBar opens your selected third-party LLM provider (e.g., ChatGPT by OpenAI, Claude by Anthropic, Gemini by Google, DeepSeek, or Perplexity) in a new browser tab. 
+When you click **Riassumi Video** or **Riassumi Commenti**, SummaBar opens your selected third-party LLM provider (e.g., ChatGPT, Claude, Gemini, AI Studio, Mistral, Grok, DeepSeek, or Perplexity) in a new browser tab. 
 
 Your interactions on those third-party websites are governed by their respective privacy policies:
 - [OpenAI ChatGPT Privacy Policy](https://openai.com/privacy/)
 - [Anthropic Claude Privacy Policy](https://www.anthropic.com/privacy)
-- [Google Gemini Privacy Policy](https://policies.google.com/privacy)
+- [Google Gemini / AI Studio Privacy Policy](https://policies.google.com/privacy)
+- [Mistral AI Privacy Policy](https://mistral.ai/terms/#privacy-policy)
+- [xAI Grok Privacy Policy](https://x.ai/privacy)
 - [DeepSeek Privacy Policy](https://www.deepseek.com/privacy)
 - [Perplexity Privacy Policy](https://www.perplexity.ai/privacy)
 

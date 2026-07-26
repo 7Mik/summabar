@@ -1,3 +1,4 @@
+import { fetchCommentsFromYouTube } from 'tubezero';
 import { VideoComment } from '../types';
 
 function findValue(obj: any, path: string, defaultValue: any = undefined): any {
@@ -13,8 +14,24 @@ function findValue(obj: any, path: string, defaultValue: any = undefined): any {
 }
 
 export async function fetchVideoComments(videoId: string, maxCount: number = 40): Promise<VideoComment[]> {
-  const comments: VideoComment[] = [];
+  try {
+    console.log(`[SummaBar] Fetching comments via tubezero for video ${videoId}...`);
+    const commentsData = await fetchCommentsFromYouTube(videoId, maxCount);
+    if (commentsData && commentsData.length > 0) {
+      console.log(`[SummaBar] tubezero fetched ${commentsData.length} comments`);
+      return commentsData.map((c: any) => ({
+        author: c.author || 'Anonimo',
+        text: c.text || '',
+        publishedTime: c.publishedTime,
+        likeCount: typeof c.likeCount === 'number' ? c.likeCount : 0
+      }));
+    }
+  } catch (err) {
+    console.warn('[SummaBar] tubezero fetchCommentsFromYouTube error:', err);
+  }
 
+  // Fallback
+  const comments: VideoComment[] = [];
   try {
     let ytInitialData: any = (window as any).ytInitialData;
 
@@ -95,7 +112,7 @@ export async function fetchVideoComments(videoId: string, maxCount: number = 40)
 
     return comments;
   } catch (err) {
-    console.error('[SummaBar] Error fetching comments:', err);
+    console.error('[SummaBar] Error fetching comments fallback:', err);
     return comments;
   }
 }

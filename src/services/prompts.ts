@@ -9,7 +9,8 @@ export function buildVideoSummaryPrompt(
   transcript: TranscriptSegment[],
   summaryType: SummaryType,
   languageCode: string,
-  adsPreference: AdsPreference
+  adsPreference: AdsPreference,
+  customPromptText?: string
 ): string {
   const fullTranscriptText = transcript.map(s => s.text).join(' ');
   const targetLanguageName = getLanguageName(languageCode);
@@ -46,6 +47,21 @@ Formatting rules:
   let promptBody = "";
 
   switch (summaryType) {
+    case "custom":
+      if (customPromptText && customPromptText.trim()) {
+        let userPrompt = customPromptText.trim();
+        if (userPrompt.includes('{transcript}')) {
+          userPrompt = userPrompt.replace('{transcript}', fullTranscriptText);
+        } else {
+          userPrompt += `\n\nProvide the response in **${targetLanguageName}**.\n\nTranscript:\n---\n${fullTranscriptText}\n---`;
+        }
+        promptBody = userPrompt;
+      } else {
+        // Fallback if custom prompt text is empty
+        promptBody = `${commonInstructions}\n# Summary\n[Summarize the key points in ${targetLanguageName}.]\n${commonFormattingRules}`;
+      }
+      break;
+
     case "concise":
       promptBody = `
 ${commonInstructions}
