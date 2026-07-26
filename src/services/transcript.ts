@@ -1,4 +1,8 @@
+import { fetchSubtitlesFromYouTube, Client } from 'tubezero';
 import { TranscriptSegment } from '../types';
+
+const safeFetch = (...args: Parameters<typeof fetch>) => window.fetch.apply(window, args);
+const tubeClient = new Client({ fetch: safeFetch });
 
 /**
  * Extracts Youtube Video ID from standard YouTube watch URL or video ID string.
@@ -58,7 +62,7 @@ async function fetchTranscriptFallback(videoId: string, language: string): Promi
 
     // 2. If not found in window, fetch YouTube watch HTML
     if (!playerResponse || !playerResponse.captions) {
-      const response = await fetch(`https://www.youtube.com/watch?v=${videoId}&bpctr=9999999999`, {
+      const response = await safeFetch(`https://www.youtube.com/watch?v=${videoId}&bpctr=9999999999`, {
         headers: {
           'Accept-Language': 'en-US,en;q=0.9'
         }
@@ -93,7 +97,7 @@ async function fetchTranscriptFallback(videoId: string, language: string): Promi
 
     if (!selectedTrack || !selectedTrack.baseUrl) return [];
 
-    const trackRes = await fetch(selectedTrack.baseUrl);
+    const trackRes = await safeFetch(selectedTrack.baseUrl);
     const trackXml = await trackRes.text();
     return parseXmlTranscript(trackXml);
   } catch (err) {
@@ -103,31 +107,24 @@ async function fetchTranscriptFallback(videoId: string, language: string): Promi
 }
 
 /**
- * Main Transcript Fetcher: Attempts `tubezero` first, then falls back to client-side page parser.
+ * Main Transcript Fetcher: Uses tubezero `fetchSubtitlesFromYouTube`, falling back if needed.
  */
 export async function getTranscript(videoId: string, language: string = 'it'): Promise<TranscriptSegment[]> {
-  // Strategy 1: Try tubezero package if available
   try {
-    const tubezeroModule = await import('tubezero');
-    // tubezero typically exports a fetch/getTranscript function or default export
-    const fetchFn = (tubezeroModule as any).getTranscript || (tubezeroModule as any).default || tubezeroModule;
-    if (typeof fetchFn === 'function') {
-      console.log('[SummaBar] Attempting transcript fetch via tubezero...');
-      const res = await fetchFn(videoId, { lang: language });
-      if (Array.isArray(res) && res.length > 0) {
-        console.log(`[SummaBar] tubezero succeeded with ${res.length} segments`);
-        return res.map((item: any) => ({
-          start: typeof item.start === 'number' ? item.start : parseFloat(item.start || 0),
-          duration: typeof item.duration === 'number' ? item.duration : parseFloat(item.dur || item.duration || 0),
-          text: item.text || item.content || ''
-        }));
-      }
+    console.log(`[SummaBar] Fetching transcript via tubezero for video ${videoId} (language: ${language})...`);
+    const segments = await fetchSubtitlesFromYouTube(videoId, language, tubeClient);
+    if (segments && segments.length > 0) {
+      console.log(`[SummaBar] tubezero fetched ${segments.length} transcript segments`);
+      return segments.map((item: any) => ({
+        start: typeof item.start === 'number' ? item.start : parseFloat(item.start || 0),
+        duration: typeof item.duration === 'number' ? item.duration : parseFloat(item.duration || item.dur || 0),
+        text: item.text || ''
+      }));
     }
   } catch (e) {
-    console.warn('[SummaBar] tubezero import or execution skipped/failed, using fallback:', e);
+    console.warn('[SummaBar] tubezero fetchSubtitlesFromYouTube error:', e);
   }
 
-  // Strategy 2: Fallback to YouTube playerResponse / XML caption track parsing
   console.log('[SummaBar] Fetching transcript via fallback playerResponse parser...');
   return await fetchTranscriptFallback(videoId, language);
 }

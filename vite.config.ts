@@ -8,11 +8,11 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        content: resolve(__dirname, 'src/content/index.ts')
+        content: resolve(__dirname, 'src/content/index.ts'),
+        injector: resolve(__dirname, 'src/injector/index.ts')
       },
       output: {
-        entryFileNames: '[name].js',
-        inlineDynamicImports: true
+        entryFileNames: '[name].js'
       }
     }
   },

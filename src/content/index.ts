@@ -1,10 +1,21 @@
+// Fix Chrome Extension "Illegal invocation" when third-party libraries call detached fetch
+if (typeof window !== 'undefined' && window.fetch) {
+  const nativeFetch = window.fetch;
+  window.fetch = function (...args: Parameters<typeof nativeFetch>) {
+    return nativeFetch.apply(window, args);
+  };
+}
+
 import { BarUI } from './BarUI';
 import { getYouTubeVideoId } from '../services/transcript';
+
+console.log('[SummaBar] Content script loaded on page:', window.location.href);
 
 let barUIInstance: BarUI | null = null;
 
 function initSummaBar(): void {
   const videoId = getYouTubeVideoId();
+  console.log('[SummaBar] initSummaBar triggered. videoId:', videoId);
   if (videoId) {
     if (!barUIInstance) {
       barUIInstance = new BarUI();
