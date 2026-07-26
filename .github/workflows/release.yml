@@ -34,7 +34,7 @@ jobs:
       - name: Package extension
         run: |
           cd dist
-          zip -r ../YtAlgoRebel_Universal.zip *
+          zip -r ../summabar_universal.zip *
           cd ..
           
       - name: Generate Release Tag
@@ -62,5 +62,5 @@ jobs:
           name: Release ${{ steps.tag.outputs.tag }}
           prerelease: ${{ steps.tag.outputs.prerelease == 'true' }}
           files: |
-            YtAlgoRebel_Universal.zip
+            summabar_universal.zip
           generate_release_notes: true
