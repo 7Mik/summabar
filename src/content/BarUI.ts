@@ -73,14 +73,29 @@ export class BarUI {
 
   private isElementVisible(el: Element): boolean {
     if (!document.contains(el)) return false;
-    const htmlEl = el as HTMLElement;
-    if (htmlEl.offsetWidth === 0 && htmlEl.offsetHeight === 0) return false;
-    const style = window.getComputedStyle(el);
-    return style.display !== 'none' && style.visibility !== 'hidden';
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
   }
 
   private ensureInserted(): void {
     const existing = document.getElementById('summabar-root');
+
+    // Fast path: If bar is already present and visible in its target container, avoid unnecessary selector probing
+    if (existing && existing.getBoundingClientRect().height > 0) {
+      // If we are in 'sidebar' mode and currently using a fallback container (not #secondary-inner),
+      // only re-probe if the preferred #secondary-inner container has become visible.
+      if (this.barPosition === 'sidebar' && existing.parentElement?.id !== 'secondary-inner') {
+        const preferred = document.querySelector('#secondary-inner');
+        if (!preferred || !this.isElementVisible(preferred)) {
+          applyThemeToBar(existing);
+          return;
+        }
+      } else {
+        applyThemeToBar(existing);
+        return;
+      }
+    }
+
     let activePosition: 'sidebar' | 'inline_likes' | 'below_likes' = this.barPosition;
 
     // List of candidate containers ordered by priority depending on the setting
@@ -141,8 +156,13 @@ export class BarUI {
       return;
     }
 
-    // If element is already attached to this target container and visible, keep it
-    if (existing && existing.parentElement === targetContainer && existing.getBoundingClientRect().height > 0) {
+    // Check if element is already correctly placed at target container (either as child or adjacent sibling for top-row)
+    const isAlreadyAttached = existing && (
+      existing.parentElement === targetContainer ||
+      (targetContainer.id === 'top-row' && targetContainer.nextElementSibling === existing)
+    );
+
+    if (isAlreadyAttached && existing.getBoundingClientRect().height > 0) {
       applyThemeToBar(existing);
       return;
     }
