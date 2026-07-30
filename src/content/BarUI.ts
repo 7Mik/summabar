@@ -71,15 +71,17 @@ export class BarUI {
     }
   }
 
+  private isElementVisible(el: Element): boolean {
+    if (!document.contains(el)) return false;
+    const htmlEl = el as HTMLElement;
+    if (htmlEl.offsetWidth === 0 && htmlEl.offsetHeight === 0) return false;
+    const style = window.getComputedStyle(el);
+    return style.display !== 'none' && style.visibility !== 'hidden';
+  }
+
   private ensureInserted(): void {
     const existing = document.getElementById('summabar-root');
-    
-    if (existing) {
-      applyThemeToBar(existing);
-      if (existing.getBoundingClientRect().height > 0) {
-        return;
-      }
-    }
+    let activePosition: 'sidebar' | 'inline_likes' | 'below_likes' = this.barPosition;
 
     // List of candidate containers ordered by priority depending on the setting
     let selectors: string[];
@@ -111,9 +113,27 @@ export class BarUI {
     let targetContainer: Element | null = null;
     for (const selector of selectors) {
       const found = document.querySelector(selector);
-      if (found) {
+      if (found && this.isElementVisible(found)) {
         targetContainer = found;
         break;
+      }
+    }
+
+    // Fallback: If preferred container is hidden/not visible (e.g. mobile/narrow/half screen), fall back to below_likes
+    if (!targetContainer && (this.barPosition === 'sidebar' || this.barPosition === 'inline_likes')) {
+      const fallbackSelectors = [
+        '#top-row',
+        'ytd-watch-metadata',
+        '#above-the-fold',
+        '#actions'
+      ];
+      for (const selector of fallbackSelectors) {
+        const found = document.querySelector(selector);
+        if (found && this.isElementVisible(found)) {
+          targetContainer = found;
+          activePosition = 'below_likes';
+          break;
+        }
       }
     }
 
@@ -121,8 +141,9 @@ export class BarUI {
       return;
     }
 
-    // If element is already attached to this target container, let YouTube finish layout rendering
-    if (existing && existing.parentElement === targetContainer) {
+    // If element is already attached to this target container and visible, keep it
+    if (existing && existing.parentElement === targetContainer && existing.getBoundingClientRect().height > 0) {
+      applyThemeToBar(existing);
       return;
     }
 
@@ -135,9 +156,9 @@ export class BarUI {
       this.attachEvents();
     }
 
-    this.element.setAttribute('data-position', this.barPosition);
+    this.element.setAttribute('data-position', activePosition);
 
-    if (this.barPosition === 'below_likes') {
+    if (activePosition === 'below_likes') {
       if (targetContainer.id === 'top-row') {
         targetContainer.insertAdjacentElement('afterend', this.element);
       } else {
@@ -150,7 +171,7 @@ export class BarUI {
       }
     } else {
       let insertTarget = targetContainer;
-      if (this.barPosition === 'inline_likes') {
+      if (activePosition === 'inline_likes') {
         const innerButtons = targetContainer.querySelector('#top-level-buttons-computed, #actions-inner');
         if (innerButtons) {
           insertTarget = innerButtons;
@@ -164,7 +185,7 @@ export class BarUI {
       }
     }
 
-    console.log('[SummaBar] Attached bar to container:', targetContainer);
+    console.log('[SummaBar] Attached bar to container:', targetContainer, 'effective position:', activePosition);
   }
 
   private createBarElement(): HTMLElement {
