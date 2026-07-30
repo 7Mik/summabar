@@ -94,7 +94,20 @@ export async function openLLMProviderWithPrompt(
     const pendingData = { text: promptText, timestamp: Date.now(), provider: settings.provider };
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       try {
-        chrome.storage.local.set({ summabar_pending_prompt: pendingData });
+        await new Promise<void>((resolve) => {
+          let resolved = false;
+          const done = () => {
+            if (!resolved) {
+              resolved = true;
+              resolve();
+            }
+          };
+          const res: any = chrome.storage.local.set({ summabar_pending_prompt: pendingData }, done);
+          if (res && typeof res.then === 'function') {
+            res.then(done);
+          }
+          setTimeout(done, 500);
+        });
         // Failsafe cleanup if injector never runs
         setTimeout(() => {
           chrome.storage.local.remove(['summabar_pending_prompt']);
