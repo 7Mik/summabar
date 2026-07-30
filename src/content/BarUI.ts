@@ -71,15 +71,35 @@ export class BarUI {
     }
   }
 
+  private isElementVisible(el: Element): boolean {
+    if (!document.contains(el)) return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }
+
+  private isAttachedToPreferredContainer(existing: HTMLElement): boolean {
+    if (this.barPosition === 'sidebar') {
+      return existing.parentElement?.id === 'secondary-inner' || existing.closest('#secondary-inner') !== null;
+    }
+    if (this.barPosition === 'inline_likes') {
+      return existing.parentElement?.id === 'top-level-buttons-computed' || existing.closest('#top-level-buttons-computed') !== null;
+    }
+    if (this.barPosition === 'below_likes') {
+      return existing.previousElementSibling?.id === 'top-row' || existing.parentElement?.id === 'top-row';
+    }
+    return false;
+  }
+
   private ensureInserted(): void {
     const existing = document.getElementById('summabar-root');
-    
-    if (existing) {
+
+    // Fast path: If bar is already present, visible, and attached to its top preferred container, avoid unnecessary selector probing
+    if (existing && this.isElementVisible(existing) && this.isAttachedToPreferredContainer(existing)) {
       applyThemeToBar(existing);
-      if (existing.getBoundingClientRect().height > 0) {
-        return;
-      }
+      return;
     }
+
+    let activePosition: 'sidebar' | 'inline_likes' | 'below_likes' = this.barPosition;
 
     // List of candidate containers ordered by priority depending on the setting
     let selectors: string[];
@@ -111,9 +131,27 @@ export class BarUI {
     let targetContainer: Element | null = null;
     for (const selector of selectors) {
       const found = document.querySelector(selector);
-      if (found) {
+      if (found && this.isElementVisible(found)) {
         targetContainer = found;
         break;
+      }
+    }
+
+    // Fallback: If preferred container is hidden/not visible (e.g. mobile/narrow/half screen), fall back to below_likes
+    if (!targetContainer && (this.barPosition === 'sidebar' || this.barPosition === 'inline_likes')) {
+      const fallbackSelectors = [
+        '#top-row',
+        'ytd-watch-metadata',
+        '#above-the-fold',
+        '#actions'
+      ];
+      for (const selector of fallbackSelectors) {
+        const found = document.querySelector(selector);
+        if (found && this.isElementVisible(found)) {
+          targetContainer = found;
+          activePosition = 'below_likes';
+          break;
+        }
       }
     }
 
@@ -121,8 +159,23 @@ export class BarUI {
       return;
     }
 
-    // If element is already attached to this target container, let YouTube finish layout rendering
-    if (existing && existing.parentElement === targetContainer) {
+    let insertTarget = targetContainer;
+    if (activePosition === 'inline_likes') {
+      const innerButtons = targetContainer.querySelector('#top-level-buttons-computed, #actions-inner');
+      if (innerButtons) {
+        insertTarget = innerButtons;
+      }
+    }
+
+    // Check if element is already correctly placed at target container (either as child of insertTarget or adjacent sibling for top-row)
+    const isAlreadyAttached = existing && (
+      (targetContainer.id === 'top-row' && activePosition === 'below_likes')
+        ? targetContainer.nextElementSibling === existing
+        : existing.parentElement === insertTarget
+    );
+
+    if (isAlreadyAttached && this.isElementVisible(existing)) {
+      applyThemeToBar(existing);
       return;
     }
 
@@ -135,9 +188,9 @@ export class BarUI {
       this.attachEvents();
     }
 
-    this.element.setAttribute('data-position', this.barPosition);
+    this.element.setAttribute('data-position', activePosition);
 
-    if (this.barPosition === 'below_likes') {
+    if (activePosition === 'below_likes') {
       if (targetContainer.id === 'top-row') {
         targetContainer.insertAdjacentElement('afterend', this.element);
       } else {
@@ -149,14 +202,6 @@ export class BarUI {
         }
       }
     } else {
-      let insertTarget = targetContainer;
-      if (this.barPosition === 'inline_likes') {
-        const innerButtons = targetContainer.querySelector('#top-level-buttons-computed, #actions-inner');
-        if (innerButtons) {
-          insertTarget = innerButtons;
-        }
-      }
-
       if (insertTarget.firstChild) {
         insertTarget.insertBefore(this.element, insertTarget.firstChild);
       } else {
@@ -164,7 +209,7 @@ export class BarUI {
       }
     }
 
-    console.log('[SummaBar] Attached bar to container:', targetContainer);
+    console.log('[SummaBar] Attached bar to container:', targetContainer, 'effective position:', activePosition);
   }
 
   private createBarElement(): HTMLElement {
