@@ -332,12 +332,14 @@ export class BarUI {
 
   private setButtonLoading(button: HTMLButtonElement, loading: boolean, originalText: string, iconSvg: string): void {
     this.isProcessing = loading;
+    const existingSpan = button.querySelector('span');
+    const labelClass = existingSpan?.className ?? 'summabar-btn-text summabar-action-text';
     if (loading) {
       button.disabled = true;
-      setSanitizedHTML(button, `<div class="summabar-spinner"></div> <span>${originalText}</span>`);
+      setSanitizedHTML(button, `<div class="summabar-spinner"></div> <span class="${labelClass}">${originalText}</span>`);
     } else {
       button.disabled = false;
-      setSanitizedHTML(button, `${iconSvg} <span>${originalText}</span>`);
+      setSanitizedHTML(button, `${iconSvg} <span class="${labelClass}">${originalText}</span>`);
     }
   }
 

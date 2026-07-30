@@ -48,6 +48,7 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
   align-items: center !important;
   flex-shrink: 0 !important;
   vertical-align: middle !important;
+  container-type: normal !important;
 }
 
 #summabar-root[data-position="below_likes"] {
