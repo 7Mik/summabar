@@ -31,6 +31,9 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
   z-index: 100 !important;
   font-family: var(--sb-yt-font) !important;
   user-select: none !important;
+  container-type: inline-size !important;
+  container-name: summabar !important;
+  max-width: 100% !important;
 }
 
 #summabar-root[data-position="sidebar"] {
@@ -45,6 +48,7 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
   align-items: center !important;
   flex-shrink: 0 !important;
   vertical-align: middle !important;
+  container-type: normal !important;
 }
 
 #summabar-root[data-position="below_likes"] {
@@ -75,16 +79,18 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) {
 .summabar-actions {
   display: flex !important;
   align-items: center !important;
+  justify-content: space-between !important;
   gap: 8px !important;
   flex-wrap: nowrap !important;
 }
 
-#summabar-root[data-position="sidebar"] .summabar-actions {
+#summabar-root[data-position="sidebar"] .summabar-actions,
+#summabar-root[data-position="below_likes"] .summabar-actions {
   width: 100% !important;
+  justify-content: space-between !important;
 }
 
-#summabar-root[data-position="inline_likes"] .summabar-actions,
-#summabar-root[data-position="below_likes"] .summabar-actions {
+#summabar-root[data-position="inline_likes"] .summabar-actions {
   width: auto !important;
   justify-content: flex-end !important;
 }
@@ -344,21 +350,41 @@ html:not([dark="true"]):not([dark]) #summabar-root:not([data-theme="dark"]) .sum
   background: #0056b3 !important;
 }
 
-/* Responsive Layout: Show text when space is available, collapse when narrow */
-@media (max-width: 1100px) {
-  .summabar-action-text {
+/* Container Queries for Container-Based Multi-Stage Responsiveness */
+
+/* Stage 1 -> Stage 2 (max-width: 510px): Hide "Summarize Comments" text first when container < 510px */
+@container summabar (max-width: 510px) {
+  .summabar-comments-text {
     display: none !important;
   }
-  .summabar-split-btn {
+  #sb-btn-comments {
     padding: 0 10px !important;
   }
 }
 
-@media (max-width: 900px) {
+/* Stage 2 -> Stage 3 (max-width: 375px): Hide "Summarize Video" text as well when container < 375px */
+@container summabar (max-width: 375px) {
+  .summabar-video-text {
+    display: none !important;
+  }
+  #sb-btn-video {
+    padding: 0 10px !important;
+  }
+}
+
+/* Stage 3 -> Stage 4 (max-width: 270px): Hide brand text "SummaBar" in ultra-narrow spaces (< 270px) */
+@container summabar (max-width: 270px) {
   .summabar-brand-text {
     display: none !important;
   }
   .summabar-brand-item {
     padding: 0 10px !important;
+  }
+}
+
+/* Stage 5 (max-width: 210px): Fallback flex wrap */
+@container summabar (max-width: 210px) {
+  .summabar-actions {
+    flex-wrap: wrap !important;
   }
 }
