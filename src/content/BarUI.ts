@@ -212,12 +212,12 @@ export class BarUI {
           <div class="summabar-split-pill">
             <button class="summabar-split-btn" id="sb-btn-video" title="${t('summarizeVideo', this.userLang)}">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>
-              <span class="summabar-btn-text summabar-action-text">${t('summarizeVideo', this.userLang)}</span>
+              <span class="summabar-btn-text summabar-action-text summabar-video-text">${t('summarizeVideo', this.userLang)}</span>
             </button>
             <div class="summabar-divider"></div>
             <button class="summabar-split-btn" id="sb-btn-comments" title="${t('summarizeComments', this.userLang)}">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span class="summabar-btn-text summabar-action-text">${t('summarizeComments', this.userLang)}</span>
+              <span class="summabar-btn-text summabar-action-text summabar-comments-text">${t('summarizeComments', this.userLang)}</span>
             </button>
           </div>
         </div>
