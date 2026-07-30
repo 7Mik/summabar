@@ -50,13 +50,21 @@ function injectTextIntoElement(el: HTMLElement, text: string): void {
     el.dispatchEvent(new Event('change', { bubbles: true }));
   } else {
     // Rich textarea / contenteditable (Gemini, Claude, etc.)
+    // Select all existing content to ensure any prefilled/restored draft is replaced
     try {
+      const selection = window.getSelection();
+      if (selection) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
       document.execCommand('insertText', false, text);
     } catch {
-      // Fallback if execCommand is unsupported or blocked
+      // Fallback if execCommand or selection is unsupported/blocked
     }
 
-    if (!el.textContent || el.textContent.trim() === '') {
+    if (el.textContent !== text) {
       const paragraph = el.querySelector('p') || el;
       paragraph.textContent = text;
     }
