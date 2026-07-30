@@ -77,23 +77,26 @@ export class BarUI {
     return rect.width > 0 && rect.height > 0;
   }
 
+  private isAttachedToPreferredContainer(existing: HTMLElement): boolean {
+    if (this.barPosition === 'sidebar') {
+      return existing.parentElement?.id === 'secondary-inner' || existing.closest('#secondary-inner') !== null;
+    }
+    if (this.barPosition === 'inline_likes') {
+      return existing.parentElement?.id === 'top-level-buttons-computed' || existing.closest('#top-level-buttons-computed') !== null;
+    }
+    if (this.barPosition === 'below_likes') {
+      return existing.previousElementSibling?.id === 'top-row' || existing.parentElement?.id === 'top-row';
+    }
+    return false;
+  }
+
   private ensureInserted(): void {
     const existing = document.getElementById('summabar-root');
 
-    // Fast path: If bar is already present and visible in its target container, avoid unnecessary selector probing
-    if (existing && existing.getBoundingClientRect().height > 0) {
-      // If we are in 'sidebar' mode and currently using a fallback container (not #secondary-inner),
-      // only re-probe if the preferred #secondary-inner container has become visible.
-      if (this.barPosition === 'sidebar' && existing.parentElement?.id !== 'secondary-inner') {
-        const preferred = document.querySelector('#secondary-inner');
-        if (!preferred || !this.isElementVisible(preferred)) {
-          applyThemeToBar(existing);
-          return;
-        }
-      } else {
-        applyThemeToBar(existing);
-        return;
-      }
+    // Fast path: If bar is already present, visible, and attached to its top preferred container, avoid unnecessary selector probing
+    if (existing && this.isElementVisible(existing) && this.isAttachedToPreferredContainer(existing)) {
+      applyThemeToBar(existing);
+      return;
     }
 
     let activePosition: 'sidebar' | 'inline_likes' | 'below_likes' = this.barPosition;
@@ -156,13 +159,22 @@ export class BarUI {
       return;
     }
 
-    // Check if element is already correctly placed at target container (either as child or adjacent sibling for top-row)
+    let insertTarget = targetContainer;
+    if (activePosition === 'inline_likes') {
+      const innerButtons = targetContainer.querySelector('#top-level-buttons-computed, #actions-inner');
+      if (innerButtons) {
+        insertTarget = innerButtons;
+      }
+    }
+
+    // Check if element is already correctly placed at target container (either as child of insertTarget or adjacent sibling for top-row)
     const isAlreadyAttached = existing && (
-      existing.parentElement === targetContainer ||
-      (targetContainer.id === 'top-row' && targetContainer.nextElementSibling === existing)
+      (targetContainer.id === 'top-row' && activePosition === 'below_likes')
+        ? targetContainer.nextElementSibling === existing
+        : existing.parentElement === insertTarget
     );
 
-    if (isAlreadyAttached && existing.getBoundingClientRect().height > 0) {
+    if (isAlreadyAttached && this.isElementVisible(existing)) {
       applyThemeToBar(existing);
       return;
     }
@@ -190,14 +202,6 @@ export class BarUI {
         }
       }
     } else {
-      let insertTarget = targetContainer;
-      if (activePosition === 'inline_likes') {
-        const innerButtons = targetContainer.querySelector('#top-level-buttons-computed, #actions-inner');
-        if (innerButtons) {
-          insertTarget = innerButtons;
-        }
-      }
-
       if (insertTarget.firstChild) {
         insertTarget.insertBefore(this.element, insertTarget.firstChild);
       } else {
