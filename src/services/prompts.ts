@@ -1,4 +1,5 @@
 import { SummaryType, AdsPreference, TranscriptSegment, VideoComment, VideoDetails, SUPPORTED_LANGUAGES } from '../types';
+import { normalizeMetadataString } from './transcript';
 
 function getLanguageName(langCode: string): string {
   const found = SUPPORTED_LANGUAGES.find(l => l.code === langCode);
@@ -37,11 +38,8 @@ export function buildVideoSummaryPrompt(
   const fullTranscriptText = formatTranscript(transcript, includeTimestamps);
   const targetLanguageName = getLanguageName(languageCode);
 
-  const rawTitle = videoDetails?.title || 'Unknown Title';
-  const rawChannel = videoDetails?.channel || 'Unknown Channel';
-
-  const videoTitle = rawTitle.replace(/[\r\n\t]+/g, ' ').replace(/"/g, "'").replace(/\s+/g, ' ').trim() || 'Unknown Title';
-  const videoChannel = rawChannel.replace(/[\r\n\t]+/g, ' ').replace(/"/g, "'").replace(/\s+/g, ' ').trim() || 'Unknown Channel';
+  const videoTitle = normalizeMetadataString(videoDetails?.title) || 'Unknown Title';
+  const videoChannel = normalizeMetadataString(videoDetails?.channel) || 'Unknown Channel';
 
   let adsSponsorPromptSection = "";
   if (adsPreference === "section") {
