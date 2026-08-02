@@ -92,6 +92,14 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
           </select>
         </div>
 
+        <div class="summabar-form-group" style="margin-top: 12px;">
+          <label class="summabar-checkbox-label" style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+            <input type="checkbox" id="sb-copy-clipboard" ${currentSettings.copyToClipboard ? 'checked' : ''} />
+            <span>${t('copyToClipboardLabel', lang)}</span>
+          </label>
+          <div style="font-size: 11px; opacity: 0.7; margin-top: 4px; margin-left: 22px;">${t('copyToClipboardSubtext', lang)}</div>
+        </div>
+
         <div class="summabar-modal-footer">
           <button class="summabar-btn" id="sb-modal-cancel">${t('cancel', lang)}</button>
           <button class="summabar-btn summabar-btn-primary" id="sb-modal-save">${t('saveSettings', lang)}</button>
@@ -110,6 +118,7 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
     const customPromptInput = document.getElementById('sb-custom-prompt') as HTMLTextAreaElement;
     const adsSelect = document.getElementById('sb-ads-select') as HTMLSelectElement;
     const positionSelect = document.getElementById('sb-position-select') as HTMLSelectElement;
+    const copyClipboardCheck = document.getElementById('sb-copy-clipboard') as HTMLInputElement;
     const closeBtn = document.getElementById('sb-modal-close') as HTMLElement;
     const cancelBtn = document.getElementById('sb-modal-cancel') as HTMLElement;
     const saveBtn = document.getElementById('sb-modal-save') as HTMLElement;
@@ -141,7 +150,8 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
         summaryType: styleSelect.value as SummaryType,
         customSummaryPrompt: customPromptInput.value.trim(),
         adsPreference: adsSelect.value as AdsPreference,
-        barPosition: positionSelect.value as 'sidebar' | 'inline_likes' | 'below_likes'
+        barPosition: positionSelect.value as 'sidebar' | 'inline_likes' | 'below_likes',
+        copyToClipboard: copyClipboardCheck?.checked ?? false
       };
 
       await saveSettings(updatedSettings);

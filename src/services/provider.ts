@@ -1,5 +1,7 @@
 import { UserSettings, PROVIDER_INFO } from '../types';
 
+const AUTO_INJECT_PROVIDERS = ['gemini', 'aistudio', 'claude', 'mistral', 'grok', 'deepseek'];
+
 /**
  * Copies prompt to user's clipboard and opens a new tab with the target LLM provider.
  */
@@ -9,24 +11,29 @@ export async function openLLMProviderWithPrompt(
 ): Promise<{ copied: boolean; providerName: string; viaClipboard: boolean; copyOnly: boolean }> {
   let copied = false;
 
-  // 1. Copy prompt to clipboard
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(promptText);
-      copied = true;
-    } else {
-      const textArea = document.createElement('textarea');
-      textArea.value = promptText;
-      textArea.style.position = 'fixed';
-      textArea.style.opacity = '0';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      copied = document.execCommand('copy');
-      document.body.removeChild(textArea);
+  const isAutoInject = AUTO_INJECT_PROVIDERS.includes(settings.provider);
+  const shouldCopyToClipboard = settings.provider === 'clipboard' || settings.copyToClipboard === true || (!isAutoInject && settings.provider !== 'chatgpt' && settings.provider !== 'perplexity');
+
+  // 1. Copy prompt to clipboard if requested or needed for provider
+  if (shouldCopyToClipboard) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(promptText);
+        copied = true;
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = promptText;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+    } catch (err) {
+      console.warn('[SummaBar] Clipboard write failed or blocked:', err);
     }
-  } catch (err) {
-    console.warn('[SummaBar] Clipboard write failed or blocked:', err);
   }
 
   // If user selected 'clipboard' only, do not open any tab
@@ -89,8 +96,7 @@ export async function openLLMProviderWithPrompt(
   }
 
   // 3. Save pending prompt to storage for auto-injector content script
-  const autoInjectProviders = ['gemini', 'aistudio', 'claude', 'mistral', 'grok', 'deepseek'];
-  if (autoInjectProviders.includes(settings.provider)) {
+  if (AUTO_INJECT_PROVIDERS.includes(settings.provider)) {
     const pendingData = { text: promptText, timestamp: Date.now(), provider: settings.provider };
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       try {

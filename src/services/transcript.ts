@@ -1,8 +1,65 @@
 import { fetchSubtitlesFromYouTube, Client } from 'tubezero';
-import { TranscriptSegment } from '../types';
+import { TranscriptSegment, VideoDetails } from '../types';
 
 const safeFetch = (...args: Parameters<typeof fetch>) => window.fetch.apply(window, args);
 const tubeClient = new Client({ fetch: safeFetch });
+
+/**
+ * Extracts Video Details (Title, Channel Name) from DOM, window globals, or TubeZero.
+ */
+export async function getVideoDetails(videoId?: string): Promise<VideoDetails> {
+  let title: string | undefined;
+  let channel: string | undefined;
+
+  // 1. Try DOM elements on YouTube watch page
+  if (typeof document !== 'undefined') {
+    const titleEl = document.querySelector('ytd-watch-metadata #title h1, h1.ytd-watch-metadata, #title h1');
+    if (titleEl && titleEl.textContent?.trim()) {
+      title = titleEl.textContent.trim();
+    }
+    const channelEl = document.querySelector('#owner #channel-name a, ytd-channel-name a, #channel-name a');
+    if (channelEl && channelEl.textContent?.trim()) {
+      channel = channelEl.textContent.trim();
+    }
+  }
+
+  // 2. Try window ytInitialPlayerResponse
+  if ((!title || !channel) && typeof window !== 'undefined') {
+    const playerResponse = (window as any).ytInitialPlayerResponse;
+    if (playerResponse?.videoDetails) {
+      if (!title && playerResponse.videoDetails.title) {
+        title = playerResponse.videoDetails.title;
+      }
+      if (!channel && playerResponse.videoDetails.author) {
+        channel = playerResponse.videoDetails.author;
+      }
+    }
+  }
+
+  // 3. Document title fallback
+  if (!title && typeof document !== 'undefined' && document.title) {
+    const docTitle = document.title.replace(/ - YouTube$/, '').trim();
+    if (docTitle && docTitle !== 'YouTube') {
+      title = docTitle;
+    }
+  }
+
+  // 4. TubeZero API fallback
+  const targetId = videoId || getYouTubeVideoId();
+  if ((!title || !channel) && targetId) {
+    try {
+      const videoInfo = await tubeClient.getVideo(targetId);
+      if (videoInfo) {
+        if (!title && videoInfo.title) title = videoInfo.title;
+        if (!channel && videoInfo.channel?.name) channel = videoInfo.channel.name;
+      }
+    } catch (e) {
+      console.warn('[SummaBar] tubezero getVideo error:', e);
+    }
+  }
+
+  return { title, channel };
+}
 
 /**
  * Extracts Youtube Video ID from standard YouTube watch URL or video ID string.

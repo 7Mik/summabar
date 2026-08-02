@@ -38,6 +38,8 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     barPositionSidebar: 'Sopra i Video Consigliati (Laterale)',
     barPositionInline: 'In linea con i Mi Piace (Stessa riga)',
     barPositionBelow: 'Sotto i Mi Piace (Allineato a destra)',
+    copyToClipboardLabel: 'Copia nella clipboard personale anche con auto-fill',
+    copyToClipboardSubtext: 'Se disattivato, i tuoi appunti non verranno sovrascritti quando usi Gemini, Claude, ecc.',
   },
   en: {
     summarizeVideo: 'Summarize Video',
@@ -76,6 +78,8 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     barPositionSidebar: 'Above Recommended Videos (Sidebar)',
     barPositionInline: 'Inline with Likes (Same Row)',
     barPositionBelow: 'Below Likes (Right Aligned)',
+    copyToClipboardLabel: 'Copy to personal clipboard even with auto-fill',
+    copyToClipboardSubtext: 'When disabled, preserves your clipboard when using Gemini, Claude, etc.',
   },
   es: {
     summarizeVideo: 'Resumir Video',
