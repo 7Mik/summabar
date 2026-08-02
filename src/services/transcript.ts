@@ -1,7 +1,7 @@
 import { fetchSubtitlesFromYouTube, Client } from 'tubezero';
 import { TranscriptSegment, VideoDetails } from '../types';
 
-const safeFetch = (...args: Parameters<typeof fetch>) => window.fetch.apply(window, args);
+const safeFetch = (...args: Parameters<typeof fetch>) => window.fetch(...args);
 const tubeClient = new Client({ fetch: safeFetch });
 
 function sanitizeMetadataString(str?: string): string | undefined {
@@ -79,7 +79,7 @@ export async function getVideoDetails(videoId?: string): Promise<VideoDetails> {
  */
 export function getYouTubeVideoId(urlOrId?: string): string | null {
   const target = urlOrId || window.location.href;
-  const match = target.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  const match = target.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
   if (match && match[1]) return match[1];
   if (target.length === 11 && !target.includes('/')) return target;
   return null;

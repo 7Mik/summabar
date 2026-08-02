@@ -5,7 +5,7 @@ function findValue(obj: any, path: string, defaultValue: any = undefined): any {
   const parts = path.split('.');
   let current = obj;
   for (const part of parts) {
-    if (current === null || typeof current !== 'object' || !current.hasOwnProperty(part)) {
+    if (current === null || typeof current !== 'object' || !Object.prototype.hasOwnProperty.call(current, part)) {
       return defaultValue;
     }
     current = current[part];
