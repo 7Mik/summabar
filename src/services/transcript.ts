@@ -4,6 +4,16 @@ import { TranscriptSegment, VideoDetails } from '../types';
 const safeFetch = (...args: Parameters<typeof fetch>) => window.fetch.apply(window, args);
 const tubeClient = new Client({ fetch: safeFetch });
 
+function sanitizeMetadataString(str?: string): string | undefined {
+  if (!str) return undefined;
+  const cleaned = str
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/"/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned || undefined;
+}
+
 /**
  * Extracts Video Details (Title, Channel Name) from DOM, window globals, or TubeZero.
  */
@@ -58,7 +68,10 @@ export async function getVideoDetails(videoId?: string): Promise<VideoDetails> {
     }
   }
 
-  return { title, channel };
+  return { 
+    title: sanitizeMetadataString(title), 
+    channel: sanitizeMetadataString(channel) 
+  };
 }
 
 /**

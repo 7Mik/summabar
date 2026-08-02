@@ -11,11 +11,8 @@ export async function openLLMProviderWithPrompt(
 ): Promise<{ copied: boolean; providerName: string; viaClipboard: boolean; copyOnly: boolean }> {
   let copied = false;
 
-  const isAutoInject = AUTO_INJECT_PROVIDERS.includes(settings.provider);
-  const shouldCopyToClipboard = settings.provider === 'clipboard' || settings.copyToClipboard === true || (!isAutoInject && settings.provider !== 'chatgpt' && settings.provider !== 'perplexity');
-
-  // 1. Copy prompt to clipboard if requested or needed for provider
-  if (shouldCopyToClipboard) {
+  // 1. If user selected 'clipboard' provider only, copy and return without opening tabs
+  if (settings.provider === 'clipboard') {
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(promptText);
@@ -32,16 +29,12 @@ export async function openLLMProviderWithPrompt(
         document.body.removeChild(textArea);
       }
     } catch (err) {
-      console.warn('[SummaBar] Clipboard write failed or blocked:', err);
+      console.warn('[SummaBar] Clipboard write failed:', err);
     }
-  }
-
-  // If user selected 'clipboard' only, do not open any tab
-  if (settings.provider === 'clipboard') {
     return { copied, providerName: 'Clipboard', viaClipboard: true, copyOnly: true };
   }
 
-  // 2. Determine target URL and mode
+  // 2. Determine target URL, provider name, and transport mode (viaClipboard vs URL parameter)
   let targetUrl = '';
   let providerName = '';
   let viaClipboard = false;
@@ -51,6 +44,7 @@ export async function openLLMProviderWithPrompt(
     providerName = 'Custom LLM';
     if (targetUrl.includes('{prompt}')) {
       targetUrl = targetUrl.replace('{prompt}', encodeURIComponent(promptText));
+      viaClipboard = false;
     } else {
       viaClipboard = true;
     }
@@ -61,9 +55,11 @@ export async function openLLMProviderWithPrompt(
     switch (settings.provider) {
       case 'chatgpt':
         targetUrl = `https://chatgpt.com/?q=${encodeURIComponent(promptText)}`;
+        viaClipboard = false;
         break;
       case 'perplexity':
         targetUrl = `https://www.perplexity.ai/?q=${encodeURIComponent(promptText)}`;
+        viaClipboard = false;
         break;
       case 'gemini':
         targetUrl = 'https://gemini.google.com/app';
@@ -91,12 +87,38 @@ export async function openLLMProviderWithPrompt(
         break;
       default:
         targetUrl = `https://chatgpt.com/?q=${encodeURIComponent(promptText)}`;
+        viaClipboard = false;
         break;
     }
   }
 
-  // 3. Save pending prompt to storage for auto-injector content script
-  if (AUTO_INJECT_PROVIDERS.includes(settings.provider)) {
+  // 3. Determine clipboard behavior after target URL & viaClipboard mode are computed
+  const isAutoInject = AUTO_INJECT_PROVIDERS.includes(settings.provider);
+  const shouldCopyToClipboard = settings.copyToClipboard === true || (viaClipboard && !isAutoInject);
+
+  if (shouldCopyToClipboard) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(promptText);
+        copied = true;
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = promptText;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+    } catch (err) {
+      console.warn('[SummaBar] Clipboard write failed or blocked:', err);
+    }
+  }
+
+  // 4. Save pending prompt to storage for auto-injector content script if supported
+  if (isAutoInject) {
     const pendingData = { text: promptText, timestamp: Date.now(), provider: settings.provider };
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       try {
@@ -124,7 +146,7 @@ export async function openLLMProviderWithPrompt(
     }
   }
 
-  // 4. Open target URL in a new tab
+  // 5. Open target URL in a new tab
   window.open(targetUrl, '_blank');
 
   return { copied, providerName, viaClipboard, copyOnly: false };

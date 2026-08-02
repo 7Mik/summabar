@@ -37,8 +37,11 @@ export function buildVideoSummaryPrompt(
   const fullTranscriptText = formatTranscript(transcript, includeTimestamps);
   const targetLanguageName = getLanguageName(languageCode);
 
-  const videoTitle = videoDetails?.title || 'Unknown Title';
-  const videoChannel = videoDetails?.channel || 'Unknown Channel';
+  const rawTitle = videoDetails?.title || 'Unknown Title';
+  const rawChannel = videoDetails?.channel || 'Unknown Channel';
+
+  const videoTitle = rawTitle.replace(/[\r\n\t]+/g, ' ').replace(/"/g, "'").replace(/\s+/g, ' ').trim() || 'Unknown Title';
+  const videoChannel = rawChannel.replace(/[\r\n\t]+/g, ' ').replace(/"/g, "'").replace(/\s+/g, ' ').trim() || 'Unknown Channel';
 
   let adsSponsorPromptSection = "";
   if (adsPreference === "section") {
@@ -96,7 +99,7 @@ Formatting rules:
         promptBody = `${mandatoryHeaderInstruction}\n\n${userPrompt}`;
       } else {
         // Fallback if custom prompt text is empty
-        promptBody = `${mandatoryHeaderInstruction}\n\n${commonInstructions}\n# Summary\n[Summarize the key points in ${targetLanguageName}.]\n${commonFormattingRules}`;
+        promptBody = `${commonInstructions}\n# Summary\n[Summarize the key points in ${targetLanguageName}.]\n${commonFormattingRules}`;
       }
       break;
 
