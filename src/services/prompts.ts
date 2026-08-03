@@ -1,8 +1,29 @@
-import { SummaryType, AdsPreference, TranscriptSegment, VideoComment, SUPPORTED_LANGUAGES } from '../types';
+import { SummaryType, AdsPreference, TranscriptSegment, VideoComment, VideoDetails, SUPPORTED_LANGUAGES } from '../types';
+import { normalizeMetadataString } from './transcript';
 
 function getLanguageName(langCode: string): string {
   const found = SUPPORTED_LANGUAGES.find(l => l.code === langCode);
   return found ? found.name : 'Italiano';
+}
+
+function formatTimestamp(seconds: number): string {
+  const totalSeconds = Math.floor(seconds);
+  const hrs = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+  if (hrs > 0) {
+    return `[${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}]`;
+  }
+  return `[${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}]`;
+}
+
+function formatTranscript(transcript: TranscriptSegment[], includeTimestamps: boolean): string {
+  if (includeTimestamps) {
+    return transcript
+      .map(s => `${formatTimestamp(s.start)} ${s.text}`)
+      .join('\n');
+  }
+  return transcript.map(s => s.text).join(' ');
 }
 
 export function buildVideoSummaryPrompt(
@@ -10,10 +31,15 @@ export function buildVideoSummaryPrompt(
   summaryType: SummaryType,
   languageCode: string,
   adsPreference: AdsPreference,
-  customPromptText?: string
+  customPromptText?: string,
+  videoDetails?: VideoDetails
 ): string {
-  const fullTranscriptText = transcript.map(s => s.text).join(' ');
+  const includeTimestamps = summaryType === 'timestamps' || (summaryType === 'custom' && !!customPromptText?.toLowerCase().includes('timestamp'));
+  const fullTranscriptText = formatTranscript(transcript, includeTimestamps);
   const targetLanguageName = getLanguageName(languageCode);
+
+  const videoTitle = normalizeMetadataString(videoDetails?.title) || 'Unknown Title';
+  const videoChannel = normalizeMetadataString(videoDetails?.channel) || 'Unknown Channel';
 
   let adsSponsorPromptSection = "";
   if (adsPreference === "section") {
@@ -26,7 +52,20 @@ export function buildVideoSummaryPrompt(
 <!-- END_ADS_SECTION -->`;
   }
 
-  const commonInstructions = `You are given a transcript from a YouTube video.
+  const mandatoryHeaderInstruction = `
+### MANDATORY OUTPUT HEADER ###
+Video Title: "${videoTitle}"
+Channel Name: "${videoChannel}"
+
+Your response MUST ALWAYS begin with an H1 heading formatted exactly as follows at the very top of your output (do NOT add any introductory text like "Here is a summary"):
+# Summary: "${videoTitle}" (${videoChannel})
+(Translate the word "Summary" into **${targetLanguageName}**, e.g. "Riassunto", "Resumen", "Résumé", "Zusammenfassung", etc.)
+`;
+
+  const commonInstructions = `
+${mandatoryHeaderInstruction}
+
+You are given a transcript from a YouTube video.
 The user wants the summary in **${targetLanguageName}**.
 ${adsPreference === "erase" ? "**IMPORTANT: Do NOT include any advertisements, sponsorships, or promotional content in your summary. Focus exclusively on the informational and educational content of the video.**" : ""}
 
@@ -55,7 +94,7 @@ Formatting rules:
         } else {
           userPrompt += `\n\nProvide the response in **${targetLanguageName}**.\n\nTranscript:\n---\n${fullTranscriptText}\n---`;
         }
-        promptBody = userPrompt;
+        promptBody = `${mandatoryHeaderInstruction}\n\n${userPrompt}`;
       } else {
         // Fallback if custom prompt text is empty
         promptBody = `${commonInstructions}\n# Summary\n[Summarize the key points in ${targetLanguageName}.]\n${commonFormattingRules}`;
@@ -110,8 +149,8 @@ Required format:
 # TLDR
 [A concise 2-3 sentence overview summarizing the video's main purpose.]
 
-# Key Learnings
-[Under this section, list entries in format '[TIMESTAMP] :: Description'. Example: '[01:23] :: Main concept discussed.']
+# Key Learnings & Timestamps
+[Under this section, list chronological entries in format '[TIMESTAMP] :: Description'. Example: '[01:23] :: Main concept discussed.']
 
 ---
 # Actionable Insights & Calls to Action

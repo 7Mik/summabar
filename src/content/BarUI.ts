@@ -1,5 +1,5 @@
 import { getSettings } from '../services/storage';
-import { getYouTubeVideoId, getTranscript } from '../services/transcript';
+import { getYouTubeVideoId, getTranscript, getVideoDetails } from '../services/transcript';
 import { fetchVideoComments } from '../services/comments';
 import { buildVideoSummaryPrompt, buildCommentSummaryPrompt } from '../services/prompts';
 import { openLLMProviderWithPrompt } from '../services/provider';
@@ -317,7 +317,10 @@ export class BarUI {
     this.setButtonLoading(button, true, t('extractingSubtitles', this.userLang), videoSvg);
 
     try {
-      const transcript = await getTranscript(videoId, settings.language);
+      const [transcript, videoDetails] = await Promise.all([
+        getTranscript(videoId, settings.language),
+        getVideoDetails(videoId)
+      ]);
 
       if (!transcript || transcript.length === 0) {
         showToast(t('noSubtitlesFound', this.userLang));
@@ -325,7 +328,14 @@ export class BarUI {
         return;
       }
 
-      const prompt = buildVideoSummaryPrompt(transcript, settings.summaryType, settings.language, settings.adsPreference, settings.customSummaryPrompt);
+      const prompt = buildVideoSummaryPrompt(
+        transcript, 
+        settings.summaryType, 
+        settings.language, 
+        settings.adsPreference, 
+        settings.customSummaryPrompt,
+        videoDetails
+      );
       const { providerName, viaClipboard, copyOnly } = await openLLMProviderWithPrompt(prompt, settings);
 
       const toastKey = copyOnly ? 'promptCopiedOnly' : (viaClipboard ? 'promptSentClipboard' : 'promptSentQuery');

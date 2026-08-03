@@ -28,7 +28,13 @@ export interface UserSettings {
   customSummaryPrompt?: string;
   adsPreference: AdsPreference;
   autoCopy: boolean;
+  copyToClipboard?: boolean;
   barPosition?: 'sidebar' | 'inline_likes' | 'below_likes';
+}
+
+export interface VideoDetails {
+  title?: string;
+  channel?: string;
 }
 
 export interface TranscriptSegment {
@@ -51,6 +57,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   summaryType: 'medium',
   adsPreference: 'erase',
   autoCopy: true,
+  copyToClipboard: false,
   barPosition: 'sidebar'
 };
 
