@@ -41,6 +41,23 @@ function clearPendingPrompt(): void {
   }
 }
 
+function isContentMatching(insertedText: string, targetText: string): boolean {
+  const normInserted = (insertedText || '').replace(/\s+/g, '');
+  const normTarget = (targetText || '').replace(/\s+/g, '');
+
+  if (!normInserted || !normTarget) return false;
+
+  if (normInserted === normTarget || normInserted.includes(normTarget)) {
+    return true;
+  }
+
+  // Check prefix and suffix (80 chars) to prevent matching unrelated prefilled drafts
+  const prefix = normTarget.slice(0, Math.min(80, normTarget.length));
+  const suffix = normTarget.slice(Math.max(0, normTarget.length - 80));
+
+  return normInserted.includes(prefix) && normInserted.includes(suffix);
+}
+
 function injectTextIntoElement(el: HTMLElement, text: string): void {
   el.focus();
 
@@ -65,8 +82,6 @@ function injectTextIntoElement(el: HTMLElement, text: string): void {
     // Ignore selection errors
   }
 
-  const normTarget = text.replace(/\s+/g, '');
-
   // 1. Try simulated ClipboardEvent 'paste' (Native handling for Gemini rich-textarea, ProseMirror, Quill)
   try {
     const dataTransfer = new DataTransfer();
@@ -81,9 +96,8 @@ function injectTextIntoElement(el: HTMLElement, text: string): void {
     console.warn('[SummaBar Injector] Paste event simulation error:', e);
   }
 
-  // Check if paste event successfully populated the element
-  let normInserted = (el.textContent || '').replace(/\s+/g, '');
-  if (normInserted.length >= normTarget.length * 0.8) {
+  // Check if paste event successfully populated the element with matching content
+  if (isContentMatching(el.textContent || '', text)) {
     el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
     return;
@@ -96,9 +110,8 @@ function injectTextIntoElement(el: HTMLElement, text: string): void {
     // Ignore execCommand error
   }
 
-  // Check if execCommand successfully populated the element
-  normInserted = (el.textContent || '').replace(/\s+/g, '');
-  if (normInserted.length >= normTarget.length * 0.8) {
+  // Check if execCommand successfully populated the element with matching content
+  if (isContentMatching(el.textContent || '', text)) {
     el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
     return;
@@ -154,9 +167,6 @@ function autoInjectPrompt(): void {
         return;
       }
 
-      // Clear from storage immediately to prevent cross-tab duplication
-      clearPendingPrompt();
-
       console.log('[SummaBar Injector] Found pending prompt for AI provider:', location.hostname);
 
       let attempts = 0;
@@ -183,10 +193,12 @@ function autoInjectPrompt(): void {
 
         if (targetInput) {
           clearInterval(interval);
+          clearPendingPrompt();
           console.log('[SummaBar Injector] Injecting prompt into input element:', targetInput);
           injectTextIntoElement(targetInput as HTMLElement, data.text);
         } else if (attempts >= 25) {
           clearInterval(interval);
+          clearPendingPrompt();
           console.warn('[SummaBar Injector] Input element not found after retries.');
         }
       }, 400);

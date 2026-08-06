@@ -8,7 +8,7 @@ const AUTO_INJECT_PROVIDERS = ['chatgpt', 'perplexity', 'gemini', 'aistudio', 'c
 export async function openLLMProviderWithPrompt(
   promptText: string, 
   settings: UserSettings
-): Promise<{ copied: boolean; providerName: string; viaClipboard: boolean; copyOnly: boolean }> {
+): Promise<{ copied: boolean; providerName: string; viaClipboard: boolean; copyOnly: boolean; isAutoInject: boolean }> {
   let copied = false;
 
   // 1. If user selected 'clipboard' provider only, copy and return without opening tabs
@@ -31,7 +31,7 @@ export async function openLLMProviderWithPrompt(
     } catch (err) {
       console.warn('[SummaBar] Clipboard write failed:', err);
     }
-    return { copied, providerName: 'Clipboard', viaClipboard: true, copyOnly: true };
+    return { copied, providerName: 'Clipboard', viaClipboard: true, copyOnly: true, isAutoInject: false };
   }
 
   // 2. Determine target URL, provider name, and transport mode (viaClipboard vs URL parameter)
@@ -149,5 +149,5 @@ export async function openLLMProviderWithPrompt(
   // 5. Open target URL in a new tab
   window.open(targetUrl, '_blank');
 
-  return { copied, providerName, viaClipboard, copyOnly: false };
+  return { copied, providerName, viaClipboard, copyOnly: false, isAutoInject };
 }
