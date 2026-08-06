@@ -1,18 +1,19 @@
 const PENDING_PROMPT_KEY = 'summabar_pending_prompt';
 
-const HOST_PROVIDER_MAP: Record<string, string> = {
-  'gemini.google.com': 'gemini',
-  'aistudio.google.com': 'aistudio',
-  'claude.ai': 'claude',
-  'chat.mistral.ai': 'mistral',
-  'grok.com': 'grok',
-  'x.ai': 'grok',
-  'chat.deepseek.com': 'deepseek',
-  'chatgpt.com': 'chatgpt',
-  'www.chatgpt.com': 'chatgpt',
-  'perplexity.ai': 'perplexity',
-  'www.perplexity.ai': 'perplexity'
-};
+function getProviderForHost(hostname: string): string | null {
+  const host = (hostname || '').toLowerCase();
+  
+  if (host === 'gemini.google.com') return 'gemini';
+  if (host === 'aistudio.google.com') return 'aistudio';
+  if (host === 'claude.ai' || host.endsWith('.claude.ai')) return 'claude';
+  if (host === 'chat.mistral.ai' || host.endsWith('.mistral.ai')) return 'mistral';
+  if (host === 'grok.com' || host === 'x.ai' || host.endsWith('.grok.com') || host.endsWith('.x.ai')) return 'grok';
+  if (host === 'chat.deepseek.com' || host.endsWith('.deepseek.com')) return 'deepseek';
+  if (host === 'chatgpt.com' || host.endsWith('.chatgpt.com')) return 'chatgpt';
+  if (host === 'perplexity.ai' || host.endsWith('.perplexity.ai')) return 'perplexity';
+
+  return null;
+}
 
 interface PendingPromptData {
   text: string;
@@ -39,9 +40,9 @@ function getPendingPromptAndClaim(): Promise<PendingPromptData | null> {
               }
 
               // 2. Validate provider matching BEFORE claiming/removing from storage
-              const currentProvider = HOST_PROVIDER_MAP[location.hostname];
-              if (pending.provider && currentProvider && pending.provider !== currentProvider) {
-                // Prompt belongs to a different AI provider! Leave in storage for target tab
+              const currentProvider = getProviderForHost(location.hostname);
+              if (!currentProvider || (pending.provider && pending.provider !== currentProvider)) {
+                // Host is unrecognized or prompt belongs to a different AI provider! Leave in storage for target tab
                 resolve(null);
                 return;
               }
