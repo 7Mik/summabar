@@ -1,5 +1,19 @@
 const PENDING_PROMPT_KEY = 'summabar_pending_prompt';
 
+const HOST_PROVIDER_MAP: Record<string, string> = {
+  'gemini.google.com': 'gemini',
+  'aistudio.google.com': 'aistudio',
+  'claude.ai': 'claude',
+  'chat.mistral.ai': 'mistral',
+  'grok.com': 'grok',
+  'x.ai': 'grok',
+  'chat.deepseek.com': 'deepseek',
+  'chatgpt.com': 'chatgpt',
+  'www.chatgpt.com': 'chatgpt',
+  'perplexity.ai': 'perplexity',
+  'www.perplexity.ai': 'perplexity'
+};
+
 interface PendingPromptData {
   text: string;
   timestamp: number;
@@ -16,7 +30,23 @@ function getPendingPromptAndClaim(): Promise<PendingPromptData | null> {
             resolved = true;
             if (data && data[PENDING_PROMPT_KEY]) {
               const pending = data[PENDING_PROMPT_KEY] as PendingPromptData;
-              // Atomically claim by removing from storage immediately on read
+
+              // 1. If prompt is expired (> 2 min), clean up storage and ignore
+              if (Date.now() - pending.timestamp > 120000) {
+                chrome.storage.local.remove([PENDING_PROMPT_KEY]);
+                resolve(null);
+                return;
+              }
+
+              // 2. Validate provider matching BEFORE claiming/removing from storage
+              const currentProvider = HOST_PROVIDER_MAP[location.hostname];
+              if (pending.provider && currentProvider && pending.provider !== currentProvider) {
+                // Prompt belongs to a different AI provider! Leave in storage for target tab
+                resolve(null);
+                return;
+              }
+
+              // 3. Atomically claim by removing from storage immediately on matched read
               // This prevents cross-tab duplication while keeping data in memory for retries
               chrome.storage.local.remove([PENDING_PROMPT_KEY]);
               resolve(pending);
@@ -147,29 +177,6 @@ function autoInjectPrompt(): void {
           promptRetries++;
           setTimeout(attemptCheck, 250);
         }
-        return;
-      }
-
-      // Check if prompt is less than 2 minutes old
-      if (Date.now() - data.timestamp > 120000) {
-        return;
-      }
-
-      const hostMap: Record<string, string> = {
-        'gemini.google.com': 'gemini',
-        'aistudio.google.com': 'aistudio',
-        'claude.ai': 'claude',
-        'chat.mistral.ai': 'mistral',
-        'grok.com': 'grok',
-        'x.ai': 'grok',
-        'chat.deepseek.com': 'deepseek',
-        'chatgpt.com': 'chatgpt',
-        'www.chatgpt.com': 'chatgpt',
-        'perplexity.ai': 'perplexity',
-        'www.perplexity.ai': 'perplexity'
-      };
-      
-      if (data.provider && hostMap[location.hostname] && data.provider !== hostMap[location.hostname]) {
         return;
       }
 
