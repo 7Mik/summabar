@@ -1,6 +1,6 @@
 import { UserSettings, PROVIDER_INFO } from '../types';
 
-const AUTO_INJECT_PROVIDERS = ['gemini', 'aistudio', 'claude', 'mistral', 'grok', 'deepseek'];
+const AUTO_INJECT_PROVIDERS = ['chatgpt', 'perplexity', 'gemini', 'aistudio', 'claude', 'mistral', 'grok', 'deepseek'];
 
 /**
  * Copies prompt to user's clipboard and opens a new tab with the target LLM provider.
@@ -54,12 +54,12 @@ export async function openLLMProviderWithPrompt(
 
     switch (settings.provider) {
       case 'chatgpt':
-        targetUrl = `https://chatgpt.com/?q=${encodeURIComponent(promptText)}`;
-        viaClipboard = false;
+        targetUrl = 'https://chatgpt.com/';
+        viaClipboard = true;
         break;
       case 'perplexity':
-        targetUrl = `https://www.perplexity.ai/?q=${encodeURIComponent(promptText)}`;
-        viaClipboard = false;
+        targetUrl = 'https://www.perplexity.ai/';
+        viaClipboard = true;
         break;
       case 'gemini':
         targetUrl = 'https://gemini.google.com/app';
@@ -86,8 +86,8 @@ export async function openLLMProviderWithPrompt(
         viaClipboard = true;
         break;
       default:
-        targetUrl = `https://chatgpt.com/?q=${encodeURIComponent(promptText)}`;
-        viaClipboard = false;
+        targetUrl = 'https://chatgpt.com/';
+        viaClipboard = true;
         break;
     }
   }
