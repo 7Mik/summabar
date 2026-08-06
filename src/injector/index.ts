@@ -48,30 +48,73 @@ function injectTextIntoElement(el: HTMLElement, text: string): void {
     (el as HTMLInputElement).value = text;
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
-  } else {
-    // Rich textarea / contenteditable (Gemini, Claude, etc.)
-    // Select all existing content to ensure any prefilled/restored draft is replaced
-    try {
-      const selection = window.getSelection();
-      if (selection) {
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-      document.execCommand('insertText', false, text);
-    } catch {
-      // Fallback if execCommand or selection is unsupported/blocked
-    }
+    return;
+  }
 
-    if (el.textContent !== text) {
-      const paragraph = el.querySelector('p') || el;
-      paragraph.textContent = text;
+  // Rich textarea / contenteditable (Gemini, Claude, ChatGPT, etc.)
+  // Select all existing content to ensure any prefilled draft is replaced
+  try {
+    const selection = window.getSelection();
+    if (selection) {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
-    
+  } catch {
+    // Ignore selection errors
+  }
+
+  const normTarget = text.replace(/\s+/g, '');
+
+  // 1. Try simulated ClipboardEvent 'paste' (Native handling for Gemini rich-textarea, ProseMirror, Quill)
+  try {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.setData('text/plain', text);
+    const pasteEvent = new ClipboardEvent('paste', {
+      clipboardData: dataTransfer,
+      bubbles: true,
+      cancelable: true
+    });
+    el.dispatchEvent(pasteEvent);
+  } catch (e) {
+    console.warn('[SummaBar Injector] Paste event simulation error:', e);
+  }
+
+  // Check if paste event successfully populated the element
+  let normInserted = (el.textContent || '').replace(/\s+/g, '');
+  if (normInserted.length >= normTarget.length * 0.8) {
     el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
+    return;
   }
+
+  // 2. Fallback to execCommand('insertText')
+  try {
+    document.execCommand('insertText', false, text);
+  } catch {
+    // Ignore execCommand error
+  }
+
+  // Check if execCommand successfully populated the element
+  normInserted = (el.textContent || '').replace(/\s+/g, '');
+  if (normInserted.length >= normTarget.length * 0.8) {
+    el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    return;
+  }
+
+  // 3. Final fallback: build structured HTML paragraphs line by line
+  const lines = text.split('\n');
+  el.innerHTML = '';
+  for (const line of lines) {
+    const p = document.createElement('p');
+    p.textContent = line || '\u200B';
+    el.appendChild(p);
+  }
+
+  el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function autoInjectPrompt(): void {
@@ -100,7 +143,11 @@ function autoInjectPrompt(): void {
         'chat.mistral.ai': 'mistral',
         'grok.com': 'grok',
         'x.ai': 'grok',
-        'chat.deepseek.com': 'deepseek'
+        'chat.deepseek.com': 'deepseek',
+        'chatgpt.com': 'chatgpt',
+        'www.chatgpt.com': 'chatgpt',
+        'perplexity.ai': 'perplexity',
+        'www.perplexity.ai': 'perplexity'
       };
       
       if (data.provider && hostMap[location.hostname] && data.provider !== hostMap[location.hostname]) {
@@ -116,8 +163,10 @@ function autoInjectPrompt(): void {
       const interval = setInterval(() => {
         attempts++;
 
-        // Candidate input elements across Gemini, AI Studio, Claude, Mistral, Grok, DeepSeek
+        // Candidate input elements across ChatGPT, Perplexity, Gemini, AI Studio, Claude, Mistral, Grok, DeepSeek
         const targetInput =
+          // ChatGPT targets
+          document.querySelector('#prompt-textarea') ||
           // Gemini & AI Studio targets
           document.querySelector('ms-prompt-input textarea') ||
           document.querySelector('rich-textarea div[contenteditable="true"]') ||
@@ -125,7 +174,7 @@ function autoInjectPrompt(): void {
           document.querySelector('.prompt-input textarea') ||
           // Claude & ProseMirror targets
           document.querySelector('.ProseMirror') ||
-          // Mistral, Grok, DeepSeek & Generic targets
+          // Mistral, Grok, DeepSeek, Perplexity & Generic targets
           document.querySelector('textarea[placeholder*="Ask"]') ||
           document.querySelector('textarea[placeholder*="Message"]') ||
           document.querySelector('textarea[placeholder*="Chiedi"]') ||

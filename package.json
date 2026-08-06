@@ -1,6 +1,6 @@
 {
   "name": "summabar",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Streamlined client-only browser extension for summarizing YouTube videos and comments using external LLM providers",
   "type": "module",
   "license": "AGPL-3.0-only",
