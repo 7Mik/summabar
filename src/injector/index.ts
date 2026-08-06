@@ -6,7 +6,7 @@ interface PendingPromptData {
   provider?: string;
 }
 
-function getPendingPrompt(): Promise<PendingPromptData | null> {
+function getPendingPromptAndClaim(): Promise<PendingPromptData | null> {
   return new Promise<PendingPromptData | null>(resolve => {
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       try {
@@ -15,7 +15,11 @@ function getPendingPrompt(): Promise<PendingPromptData | null> {
           if (!resolved) {
             resolved = true;
             if (data && data[PENDING_PROMPT_KEY]) {
-              resolve(data[PENDING_PROMPT_KEY] as PendingPromptData);
+              const pending = data[PENDING_PROMPT_KEY] as PendingPromptData;
+              // Atomically claim by removing from storage immediately on read
+              // This prevents cross-tab duplication while keeping data in memory for retries
+              chrome.storage.local.remove([PENDING_PROMPT_KEY]);
+              resolve(pending);
             } else {
               resolve(null);
             }
@@ -47,15 +51,18 @@ function isContentMatching(insertedText: string, targetText: string): boolean {
 
   if (!normInserted || !normTarget) return false;
 
+  // 1. Exact match or full target inclusion
   if (normInserted === normTarget || normInserted.includes(normTarget)) {
     return true;
   }
 
-  // Check prefix and suffix (80 chars) to prevent matching unrelated prefilled drafts
+  // 2. High fidelity match: length ratio must be 95%-105% AND contain both prefix and suffix
   const prefix = normTarget.slice(0, Math.min(80, normTarget.length));
   const suffix = normTarget.slice(Math.max(0, normTarget.length - 80));
+  const lengthRatio = normInserted.length / normTarget.length;
+  const lengthValid = lengthRatio >= 0.95 && lengthRatio <= 1.05;
 
-  return normInserted.includes(prefix) && normInserted.includes(suffix);
+  return lengthValid && normInserted.includes(prefix) && normInserted.includes(suffix);
 }
 
 function injectTextIntoElement(el: HTMLElement, text: string): void {
@@ -134,7 +141,7 @@ function autoInjectPrompt(): void {
   let promptRetries = 0;
 
   const attemptCheck = () => {
-    getPendingPrompt().then(data => {
+    getPendingPromptAndClaim().then(data => {
       if (!data || !data.text) {
         if (promptRetries < 5) {
           promptRetries++;
@@ -145,7 +152,6 @@ function autoInjectPrompt(): void {
 
       // Check if prompt is less than 2 minutes old
       if (Date.now() - data.timestamp > 120000) {
-        clearPendingPrompt();
         return;
       }
 
@@ -167,7 +173,7 @@ function autoInjectPrompt(): void {
         return;
       }
 
-      console.log('[SummaBar Injector] Found pending prompt for AI provider:', location.hostname);
+      console.log('[SummaBar Injector] Claimed pending prompt for AI provider:', location.hostname);
 
       let attempts = 0;
       const interval = setInterval(() => {
@@ -193,12 +199,10 @@ function autoInjectPrompt(): void {
 
         if (targetInput) {
           clearInterval(interval);
-          clearPendingPrompt();
           console.log('[SummaBar Injector] Injecting prompt into input element:', targetInput);
           injectTextIntoElement(targetInput as HTMLElement, data.text);
         } else if (attempts >= 25) {
           clearInterval(interval);
-          clearPendingPrompt();
           console.warn('[SummaBar Injector] Input element not found after retries.');
         }
       }, 400);
