@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SummaBar - Free YouTube LLM Summarizer",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Free YouTube video and comment summaries using ChatGPT, Claude, and more.",
   "icons": {
     "16": "icon16.png",
@@ -30,7 +30,11 @@
     "https://chat.mistral.ai/*",
     "https://grok.com/*",
     "https://x.ai/*",
-    "https://chat.deepseek.com/*"
+    "https://chat.deepseek.com/*",
+    "https://chatgpt.com/*",
+    "https://*.chatgpt.com/*",
+    "https://www.perplexity.ai/*",
+    "https://perplexity.ai/*"
   ],
   "content_scripts": [
     {
@@ -47,7 +51,11 @@
         "https://chat.mistral.ai/*",
         "https://grok.com/*",
         "https://x.ai/*",
-        "https://chat.deepseek.com/*"
+        "https://chat.deepseek.com/*",
+        "https://chatgpt.com/*",
+        "https://*.chatgpt.com/*",
+        "https://www.perplexity.ai/*",
+        "https://perplexity.ai/*"
       ],
       "js": ["injector.js"],
       "run_at": "document_idle"

@@ -1,12 +1,27 @@
 const PENDING_PROMPT_KEY = 'summabar_pending_prompt';
 
+function getProviderForHost(hostname: string): string | null {
+  const host = (hostname || '').toLowerCase();
+  
+  if (host === 'gemini.google.com') return 'gemini';
+  if (host === 'aistudio.google.com') return 'aistudio';
+  if (host === 'claude.ai' || host.endsWith('.claude.ai')) return 'claude';
+  if (host === 'chat.mistral.ai' || host.endsWith('.mistral.ai')) return 'mistral';
+  if (host === 'grok.com' || host === 'x.ai' || host.endsWith('.grok.com') || host.endsWith('.x.ai')) return 'grok';
+  if (host === 'chat.deepseek.com' || host.endsWith('.deepseek.com')) return 'deepseek';
+  if (host === 'chatgpt.com' || host.endsWith('.chatgpt.com')) return 'chatgpt';
+  if (host === 'perplexity.ai' || host.endsWith('.perplexity.ai')) return 'perplexity';
+
+  return null;
+}
+
 interface PendingPromptData {
   text: string;
   timestamp: number;
   provider?: string;
 }
 
-function getPendingPrompt(): Promise<PendingPromptData | null> {
+function getPendingPromptAndClaim(): Promise<PendingPromptData | null> {
   return new Promise<PendingPromptData | null>(resolve => {
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
       try {
@@ -15,7 +30,27 @@ function getPendingPrompt(): Promise<PendingPromptData | null> {
           if (!resolved) {
             resolved = true;
             if (data && data[PENDING_PROMPT_KEY]) {
-              resolve(data[PENDING_PROMPT_KEY] as PendingPromptData);
+              const pending = data[PENDING_PROMPT_KEY] as PendingPromptData;
+
+              // 1. If prompt is expired (> 2 min), clean up storage and ignore
+              if (Date.now() - pending.timestamp > 120000) {
+                chrome.storage.local.remove([PENDING_PROMPT_KEY]);
+                resolve(null);
+                return;
+              }
+
+              // 2. Validate provider matching BEFORE claiming/removing from storage
+              const currentProvider = getProviderForHost(location.hostname);
+              if (!currentProvider || (pending.provider && pending.provider !== currentProvider)) {
+                // Host is unrecognized or prompt belongs to a different AI provider! Leave in storage for target tab
+                resolve(null);
+                return;
+              }
+
+              // 3. Atomically claim by removing from storage immediately on matched read
+              // This prevents cross-tab duplication while keeping data in memory for retries
+              chrome.storage.local.remove([PENDING_PROMPT_KEY]);
+              resolve(pending);
             } else {
               resolve(null);
             }
@@ -41,6 +76,26 @@ function clearPendingPrompt(): void {
   }
 }
 
+function isContentMatching(insertedText: string, targetText: string): boolean {
+  const normInserted = (insertedText || '').replace(/\s+/g, '');
+  const normTarget = (targetText || '').replace(/\s+/g, '');
+
+  if (!normInserted || !normTarget) return false;
+
+  // 1. Exact match or full target inclusion
+  if (normInserted === normTarget || normInserted.includes(normTarget)) {
+    return true;
+  }
+
+  // 2. High fidelity match: length ratio must be 95%-105% AND contain both prefix and suffix
+  const prefix = normTarget.slice(0, Math.min(80, normTarget.length));
+  const suffix = normTarget.slice(Math.max(0, normTarget.length - 80));
+  const lengthRatio = normInserted.length / normTarget.length;
+  const lengthValid = lengthRatio >= 0.95 && lengthRatio <= 1.05;
+
+  return lengthValid && normInserted.includes(prefix) && normInserted.includes(suffix);
+}
+
 function injectTextIntoElement(el: HTMLElement, text: string): void {
   el.focus();
 
@@ -48,37 +103,76 @@ function injectTextIntoElement(el: HTMLElement, text: string): void {
     (el as HTMLInputElement).value = text;
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
-  } else {
-    // Rich textarea / contenteditable (Gemini, Claude, etc.)
-    // Select all existing content to ensure any prefilled/restored draft is replaced
-    try {
-      const selection = window.getSelection();
-      if (selection) {
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-      document.execCommand('insertText', false, text);
-    } catch {
-      // Fallback if execCommand or selection is unsupported/blocked
-    }
+    return;
+  }
 
-    if (el.textContent !== text) {
-      const paragraph = el.querySelector('p') || el;
-      paragraph.textContent = text;
+  // Rich textarea / contenteditable (Gemini, Claude, ChatGPT, etc.)
+  // Select all existing content to ensure any prefilled draft is replaced
+  try {
+    const selection = window.getSelection();
+    if (selection) {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
-    
+  } catch {
+    // Ignore selection errors
+  }
+
+  // 1. Try simulated ClipboardEvent 'paste' (Native handling for Gemini rich-textarea, ProseMirror, Quill)
+  try {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.setData('text/plain', text);
+    const pasteEvent = new ClipboardEvent('paste', {
+      clipboardData: dataTransfer,
+      bubbles: true,
+      cancelable: true
+    });
+    el.dispatchEvent(pasteEvent);
+  } catch (e) {
+    console.warn('[SummaBar Injector] Paste event simulation error:', e);
+  }
+
+  // Check if paste event successfully populated the element with matching content
+  if (isContentMatching(el.textContent || '', text)) {
     el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
+    return;
   }
+
+  // 2. Fallback to execCommand('insertText')
+  try {
+    document.execCommand('insertText', false, text);
+  } catch {
+    // Ignore execCommand error
+  }
+
+  // Check if execCommand successfully populated the element with matching content
+  if (isContentMatching(el.textContent || '', text)) {
+    el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    return;
+  }
+
+  // 3. Final fallback: build structured HTML paragraphs line by line
+  const lines = text.split('\n');
+  el.innerHTML = '';
+  for (const line of lines) {
+    const p = document.createElement('p');
+    p.textContent = line || '\u200B';
+    el.appendChild(p);
+  }
+
+  el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function autoInjectPrompt(): void {
   let promptRetries = 0;
 
   const attemptCheck = () => {
-    getPendingPrompt().then(data => {
+    getPendingPromptAndClaim().then(data => {
       if (!data || !data.text) {
         if (promptRetries < 5) {
           promptRetries++;
@@ -87,37 +181,16 @@ function autoInjectPrompt(): void {
         return;
       }
 
-      // Check if prompt is less than 2 minutes old
-      if (Date.now() - data.timestamp > 120000) {
-        clearPendingPrompt();
-        return;
-      }
-
-      const hostMap: Record<string, string> = {
-        'gemini.google.com': 'gemini',
-        'aistudio.google.com': 'aistudio',
-        'claude.ai': 'claude',
-        'chat.mistral.ai': 'mistral',
-        'grok.com': 'grok',
-        'x.ai': 'grok',
-        'chat.deepseek.com': 'deepseek'
-      };
-      
-      if (data.provider && hostMap[location.hostname] && data.provider !== hostMap[location.hostname]) {
-        return;
-      }
-
-      // Clear from storage immediately to prevent cross-tab duplication
-      clearPendingPrompt();
-
-      console.log('[SummaBar Injector] Found pending prompt for AI provider:', location.hostname);
+      console.log('[SummaBar Injector] Claimed pending prompt for AI provider:', location.hostname);
 
       let attempts = 0;
       const interval = setInterval(() => {
         attempts++;
 
-        // Candidate input elements across Gemini, AI Studio, Claude, Mistral, Grok, DeepSeek
+        // Candidate input elements across ChatGPT, Perplexity, Gemini, AI Studio, Claude, Mistral, Grok, DeepSeek
         const targetInput =
+          // ChatGPT targets
+          document.querySelector('#prompt-textarea') ||
           // Gemini & AI Studio targets
           document.querySelector('ms-prompt-input textarea') ||
           document.querySelector('rich-textarea div[contenteditable="true"]') ||
@@ -125,7 +198,7 @@ function autoInjectPrompt(): void {
           document.querySelector('.prompt-input textarea') ||
           // Claude & ProseMirror targets
           document.querySelector('.ProseMirror') ||
-          // Mistral, Grok, DeepSeek & Generic targets
+          // Mistral, Grok, DeepSeek, Perplexity & Generic targets
           document.querySelector('textarea[placeholder*="Ask"]') ||
           document.querySelector('textarea[placeholder*="Message"]') ||
           document.querySelector('textarea[placeholder*="Chiedi"]') ||

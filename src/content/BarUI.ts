@@ -336,9 +336,11 @@ export class BarUI {
         settings.customSummaryPrompt,
         videoDetails
       );
-      const { providerName, viaClipboard, copyOnly } = await openLLMProviderWithPrompt(prompt, settings);
+      const { providerName, viaClipboard, copyOnly, isAutoInject } = await openLLMProviderWithPrompt(prompt, settings);
 
-      const toastKey = copyOnly ? 'promptCopiedOnly' : (viaClipboard ? 'promptSentClipboard' : 'promptSentQuery');
+      const toastKey = copyOnly 
+        ? 'promptCopiedOnly' 
+        : (isAutoInject ? 'promptSentQuery' : (viaClipboard ? 'promptSentClipboard' : 'promptSentQuery'));
       showToast(t(toastKey, this.userLang, { provider: providerName }));
     } catch (err) {
       console.error('[SummaBar] Error summarizing video:', err);
@@ -373,9 +375,11 @@ export class BarUI {
       }
 
       const prompt = buildCommentSummaryPrompt(comments, settings.language);
-      const { providerName, viaClipboard, copyOnly } = await openLLMProviderWithPrompt(prompt, settings);
+      const { providerName, viaClipboard, copyOnly, isAutoInject } = await openLLMProviderWithPrompt(prompt, settings);
 
-      const toastKey = copyOnly ? 'promptCopiedOnly' : (viaClipboard ? 'promptSentClipboard' : 'promptSentQuery');
+      const toastKey = copyOnly 
+        ? 'promptCopiedOnly' 
+        : (isAutoInject ? 'promptSentQuery' : (viaClipboard ? 'promptSentClipboard' : 'promptSentQuery'));
       showToast(t(toastKey, this.userLang, { provider: providerName }));
     } catch (err) {
       console.error('[SummaBar] Error summarizing comments:', err);

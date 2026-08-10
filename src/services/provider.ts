@@ -1,6 +1,6 @@
 import { UserSettings, PROVIDER_INFO } from '../types';
 
-const AUTO_INJECT_PROVIDERS = ['gemini', 'aistudio', 'claude', 'mistral', 'grok', 'deepseek'];
+const AUTO_INJECT_PROVIDERS = ['chatgpt', 'perplexity', 'gemini', 'aistudio', 'claude', 'mistral', 'grok', 'deepseek'];
 
 /**
  * Copies prompt to user's clipboard and opens a new tab with the target LLM provider.
@@ -8,7 +8,7 @@ const AUTO_INJECT_PROVIDERS = ['gemini', 'aistudio', 'claude', 'mistral', 'grok'
 export async function openLLMProviderWithPrompt(
   promptText: string, 
   settings: UserSettings
-): Promise<{ copied: boolean; providerName: string; viaClipboard: boolean; copyOnly: boolean }> {
+): Promise<{ copied: boolean; providerName: string; viaClipboard: boolean; copyOnly: boolean; isAutoInject: boolean }> {
   let copied = false;
 
   // 1. If user selected 'clipboard' provider only, copy and return without opening tabs
@@ -31,7 +31,7 @@ export async function openLLMProviderWithPrompt(
     } catch (err) {
       console.warn('[SummaBar] Clipboard write failed:', err);
     }
-    return { copied, providerName: 'Clipboard', viaClipboard: true, copyOnly: true };
+    return { copied, providerName: 'Clipboard', viaClipboard: true, copyOnly: true, isAutoInject: false };
   }
 
   // 2. Determine target URL, provider name, and transport mode (viaClipboard vs URL parameter)
@@ -54,12 +54,12 @@ export async function openLLMProviderWithPrompt(
 
     switch (settings.provider) {
       case 'chatgpt':
-        targetUrl = `https://chatgpt.com/?q=${encodeURIComponent(promptText)}`;
-        viaClipboard = false;
+        targetUrl = 'https://chatgpt.com/';
+        viaClipboard = true;
         break;
       case 'perplexity':
-        targetUrl = `https://www.perplexity.ai/?q=${encodeURIComponent(promptText)}`;
-        viaClipboard = false;
+        targetUrl = 'https://www.perplexity.ai/';
+        viaClipboard = true;
         break;
       case 'gemini':
         targetUrl = 'https://gemini.google.com/app';
@@ -86,8 +86,8 @@ export async function openLLMProviderWithPrompt(
         viaClipboard = true;
         break;
       default:
-        targetUrl = `https://chatgpt.com/?q=${encodeURIComponent(promptText)}`;
-        viaClipboard = false;
+        targetUrl = 'https://chatgpt.com/';
+        viaClipboard = true;
         break;
     }
   }
@@ -149,5 +149,5 @@ export async function openLLMProviderWithPrompt(
   // 5. Open target URL in a new tab
   window.open(targetUrl, '_blank');
 
-  return { copied, providerName, viaClipboard, copyOnly: false };
+  return { copied, providerName, viaClipboard, copyOnly: false, isAutoInject };
 }
