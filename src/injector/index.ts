@@ -96,6 +96,15 @@ function isContentMatching(insertedText: string, targetText: string): boolean {
   return lengthValid && normInserted.includes(prefix) && normInserted.includes(suffix);
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function injectTextIntoElement(el: HTMLElement, text: string): void {
   el.focus();
 
@@ -148,7 +157,7 @@ function injectTextIntoElement(el: HTMLElement, text: string): void {
       // Also provide text/html for Firefox & ProseMirror rich text editors
       const htmlContent = text
         .split('\n')
-        .map(line => `<p>${line || '<br>'}</p>`)
+        .map(line => `<p>${escapeHtml(line) || '<br>'}</p>`)
         .join('');
       dataTransfer.setData('text/html', htmlContent);
 
@@ -236,9 +245,11 @@ function findTargetInput(): HTMLElement | null {
   ];
 
   for (const selector of candidateSelectors) {
-    const el = document.querySelector(selector);
-    if (el && isElementReady(el)) {
-      return el as HTMLElement;
+    const elements = document.querySelectorAll(selector);
+    for (const el of elements) {
+      if (isElementReady(el)) {
+        return el as HTMLElement;
+      }
     }
   }
 
