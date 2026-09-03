@@ -118,6 +118,8 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     barPositionSidebar: 'Encima de Videos Recomendados (Lateral)',
     barPositionInline: 'En línea con Me Gusta (Misma fila)',
     barPositionBelow: 'Debajo de Me Gusta (Alineado a la derecha)',
+    copyToClipboardLabel: 'Copiar al portapapeles incluso con auto-relleno',
+    copyToClipboardSubtext: 'Si está desactivado, conserva tu portapapeles al usar Gemini, Claude, etc.',
   },
   fr: {
     summarizeVideo: 'Résumer la Vidéo',
@@ -156,6 +158,8 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     barPositionSidebar: 'Au-dessus des Vidéos Recommandées (Latéral)',
     barPositionInline: 'Aligné avec les J\'aime (Même ligne)',
     barPositionBelow: 'Sous les J\'aime (Aligné à droite)',
+    copyToClipboardLabel: 'Copier dans le presse-papiers même avec remplissage auto',
+    copyToClipboardSubtext: 'Si désactivé, préserve votre presse-papiers lors de l\'utilisation de Gemini, Claude, etc.',
   },
   de: {
     summarizeVideo: 'Video zusammenfassen',
@@ -194,6 +198,8 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     barPositionSidebar: 'Über empfohlenen Videos (Seitenleiste)',
     barPositionInline: 'Neben Gefällt mir (Gleiche Zeile)',
     barPositionBelow: 'Unter Gefällt mir (Rechtsbündig)',
+    copyToClipboardLabel: 'In Zwischenablage kopieren auch mit Auto-Fill',
+    copyToClipboardSubtext: 'Wenn deaktiviert, bleibt die Zwischenablage bei Nutzung von Gemini, Claude etc. unberührt.',
   },
   pt: {
     summarizeVideo: 'Resumir Vídeo',
@@ -232,6 +238,8 @@ export const TRANSLATIONS: Record<SupportedLang, Record<string, string>> = {
     barPositionSidebar: 'Acima dos Vídeos Recomendados (Lateral)',
     barPositionInline: 'Na mesma linha das Curtidas',
     barPositionBelow: 'Abaixo das Curtidas (Alinhado à direita)',
+    copyToClipboardLabel: 'Copiar para a área de transferência mesmo com preenchimento automático',
+    copyToClipboardSubtext: 'Se desativado, preserva sua área de transferência ao usar Gemini, Claude, etc.',
   }
 };
 

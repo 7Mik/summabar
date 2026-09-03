@@ -98,7 +98,13 @@ export async function fetchVideoComments(videoId: string, maxCount: number = 40)
       const payload = findValue(mutation, 'payload.commentEntityPayload');
       if (payload) {
         const author = findValue(payload, 'authorText.simpleText', 'Anonimo');
-        const text = findValue(payload, 'contentText.runs[0].text', '');
+        const runs = findValue(payload, 'contentText.runs');
+        let text = '';
+        if (Array.isArray(runs)) {
+          text = runs.map((r: any) => r?.text || '').join('').trim();
+        } else {
+          text = (findValue(payload, 'contentText.simpleText', '') || '').trim();
+        }
         const publishedTime = findValue(payload, 'publishedTimeText.simpleText');
         const rawLikes = findValue(payload, 'voteCount.simpleText');
         const likeCount = rawLikes ? parseInt(rawLikes.replace(/\D/g, ''), 10) || 0 : 0;

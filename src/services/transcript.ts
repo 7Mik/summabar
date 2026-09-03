@@ -97,16 +97,47 @@ function unescapeXml(text: string): string {
 }
 
 /**
- * Fallback Regex XML Parser for YouTube Subtitles.
+ * Robust XML Parser for YouTube Subtitles using DOMParser.
  */
 function parseXmlTranscript(xmlText: string): TranscriptSegment[] {
   const segments: TranscriptSegment[] = [];
-  const regex = /<text start="([^"]+)" dur="([^"]+)"[^>]*>(.*?)<\/text>/g;
+  if (!xmlText) return segments;
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlText, 'text/xml');
+    const textNodes = doc.getElementsByTagName('text');
+
+    for (let i = 0; i < textNodes.length; i++) {
+      const node = textNodes[i];
+      const startAttr = node.getAttribute('start');
+      const durAttr = node.getAttribute('dur');
+      const text = (node.textContent || '').replace(/[\r\n\t]+/g, ' ').trim();
+
+      if (startAttr && text) {
+        const start = parseFloat(startAttr);
+        const duration = durAttr ? parseFloat(durAttr) : 0;
+        if (!isNaN(start)) {
+          segments.push({ start, duration, text });
+        }
+      }
+    }
+
+    if (segments.length > 0) {
+      return segments;
+    }
+  } catch (e) {
+    console.warn('[SummaBar] DOMParser XML parsing failed, using fallback regex:', e);
+  }
+
+  // Fallback regex with independent attribute matching
+  const regex = /<text\b[^>]*\bstart="([^"]+)"[^>]*>(.*?)<\/text>/gi;
   let match;
   while ((match = regex.exec(xmlText)) !== null) {
     const start = parseFloat(match[1]);
-    const duration = parseFloat(match[2]);
-    const text = unescapeXml(match[3]);
+    const durMatch = match[0].match(/\bdur="([^"]+)"/i);
+    const duration = durMatch ? parseFloat(durMatch[1]) : 0;
+    const text = unescapeXml(match[2]);
 
     if (text && !isNaN(start)) {
       segments.push({ start, duration, text });

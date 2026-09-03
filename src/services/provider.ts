@@ -40,7 +40,11 @@ export async function openLLMProviderWithPrompt(
   let viaClipboard = false;
 
   if (settings.provider === 'custom' && settings.customUrl) {
-    targetUrl = settings.customUrl;
+    let custom = settings.customUrl.trim();
+    if (!/^https?:\/\//i.test(custom)) {
+      custom = `https://${custom}`;
+    }
+    targetUrl = custom;
     providerName = 'Custom LLM';
     if (targetUrl.includes('{prompt}')) {
       targetUrl = targetUrl.replace('{prompt}', encodeURIComponent(promptText));
@@ -147,7 +151,7 @@ export async function openLLMProviderWithPrompt(
   }
 
   // 5. Open target URL in a new tab
-  window.open(targetUrl, '_blank');
+  window.open(targetUrl, '_blank', 'noopener,noreferrer');
 
   return { copied, providerName, viaClipboard, copyOnly: false, isAutoInject };
 }
