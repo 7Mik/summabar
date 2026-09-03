@@ -38,6 +38,7 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 
 // Listen to YouTube single-page-app (SPA) page transition events
 window.addEventListener('yt-navigate-finish', initSummaBar);
+window.addEventListener('yt-page-data-updated', initSummaBar);
 window.addEventListener('popstate', initSummaBar);
 
 // MutationObserver fallback to catch dynamic URL changes on YouTube
@@ -50,4 +51,16 @@ const observer = new MutationObserver(() => {
   }
 });
 
-observer.observe(document.body, { childList: true, subtree: true });
+function startUrlObserver(): void {
+  if (document.body) {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } else {
+    window.addEventListener('DOMContentLoaded', () => {
+      if (document.body) {
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    }, { once: true });
+  }
+}
+
+startUrlObserver();

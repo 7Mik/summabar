@@ -21,6 +21,12 @@ interface PendingPromptData {
   provider?: string;
 }
 
+function clearPendingPrompt(): void {
+  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.remove([PENDING_PROMPT_KEY]);
+  }
+}
+
 function getPendingPromptAndClaim(): Promise<PendingPromptData | null> {
   return new Promise<PendingPromptData | null>(resolve => {
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
@@ -34,7 +40,7 @@ function getPendingPromptAndClaim(): Promise<PendingPromptData | null> {
 
               // 1. If prompt is expired (> 2 min), clean up storage and ignore
               if (Date.now() - pending.timestamp > 120000) {
-                chrome.storage.local.remove([PENDING_PROMPT_KEY]);
+                clearPendingPrompt();
                 resolve(null);
                 return;
               }
@@ -49,7 +55,7 @@ function getPendingPromptAndClaim(): Promise<PendingPromptData | null> {
 
               // 3. Atomically claim by removing from storage immediately on matched read
               // This prevents cross-tab duplication while keeping data in memory for retries
-              chrome.storage.local.remove([PENDING_PROMPT_KEY]);
+              clearPendingPrompt();
               resolve(pending);
             } else {
               resolve(null);
@@ -68,12 +74,6 @@ function getPendingPromptAndClaim(): Promise<PendingPromptData | null> {
       resolve(null);
     }
   });
-}
-
-function clearPendingPrompt(): void {
-  if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-    chrome.storage.local.remove([PENDING_PROMPT_KEY]);
-  }
 }
 
 function isContentMatching(insertedText: string, targetText: string): boolean {

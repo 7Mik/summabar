@@ -47,7 +47,7 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
 
         <div class="summabar-form-group" id="sb-custom-url-group" style="display: ${currentSettings.provider === 'custom' ? 'block' : 'none'};">
           <label class="summabar-label">${t('customUrlLabel', lang)}</label>
-          <input type="text" id="sb-custom-url" class="summabar-input" placeholder="https://my-llm.com/chat?text={prompt}" value="${currentSettings.customUrl || ''}" />
+          <input type="text" id="sb-custom-url" class="summabar-input" placeholder="https://my-llm.com/chat?text={prompt}" value="${escapeHtml(currentSettings.customUrl || '')}" />
         </div>
 
         <div class="summabar-form-group">
@@ -131,9 +131,18 @@ export function openSettingsModal(onSave?: (settings: UserSettings) => void): vo
       customPromptGroup.style.display = styleSelect.value === 'custom' ? 'block' : 'none';
     });
 
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    };
+
     const closeModal = () => {
+      document.removeEventListener('keydown', onKeyDown);
       overlay.remove();
     };
+
+    document.addEventListener('keydown', onKeyDown);
 
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
